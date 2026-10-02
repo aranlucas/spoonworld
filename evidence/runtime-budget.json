@@ -1,0 +1,35 @@
+{
+  "browser": "154.0.8037.95",
+  "elapsedMs": 3007,
+  "simulationTicks": 3,
+  "renderFrames": 90,
+  "budget": {
+    "particles": 0,
+    "canvas": 614400,
+    "fps": 30,
+    "frames": 91,
+    "history": 0,
+    "cells": 61,
+    "residents": 12,
+    "paused": false,
+    "saving": true
+  },
+  "metrics": [
+    {
+      "name": "Nodes",
+      "value": 940
+    },
+    {
+      "name": "TaskDuration",
+      "value": 0.203848
+    },
+    {
+      "name": "JSHeapUsedSize",
+      "value": 6849820
+    },
+    {
+      "name": "JSHeapTotalSize",
+      "value": 11862016
+    }
+  ]
+}

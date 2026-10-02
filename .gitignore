@@ -1,0 +1,9 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.zip
+.DS_Store
+artifacts/
+__pycache__/
+*.pyc

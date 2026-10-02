@@ -1,0 +1,26 @@
+{
+  "name": "spoonworld",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A local-first ingredient ecology toy: a tiny world, by the spoonful.",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build && node scripts/build-offline.mjs",
+    "preview": "vite preview --host 127.0.0.1",
+    "start": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "playwright test",
+    "format": "prettier --write src scripts tests *.json *.mjs *.html *.md wrangler.jsonc",
+    "format:check": "prettier --check src scripts tests *.json *.mjs *.html *.md wrangler.jsonc"
+  },
+  "dependencies": {
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "prettier": "3.9.9",
+    "vite": "8.3.2"
+  }
+}
