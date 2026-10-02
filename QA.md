@@ -41,7 +41,7 @@ A sibling project occupied the initial generic server port during final verifica
 
 ## Publication status and limits
 
-The repository [aranlucas/spoonworld](https://github.com/aranlucas/spoonworld) is **private**, verified through the GitHub connector. The playable implementation is prepared on `feature/ingredient-ecology` for a meaningful draft PR; the default branch contains a short repository overview. Final PR and source-push status are recorded in `evidence/publication-status.json`.
+The repository [aranlucas/spoonworld](https://github.com/aranlucas/spoonworld) is **private**, verified through the GitHub connector. The playable implementation is published on `feature/ingredient-ecology` in [draft PR #1](https://github.com/aranlucas/spoonworld/pull/1); the default branch contains a short repository overview. Final PR and source-push status are recorded in `evidence/publication-status.json`.
 
 The existing GitHub CLI authentication works through the supported host-permission route. Credentials and browser security settings were neither copied nor configured. No public deployment has been performed. Source and a built portable app are packaged as ZIPs, with deployment-ready Railway and Cloudflare static configuration.
 
