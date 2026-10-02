@@ -1,8 +1,8 @@
 {
   "browser": "154.0.8037.95",
-  "elapsedMs": 3007,
+  "elapsedMs": 3010,
   "simulationTicks": 3,
-  "renderFrames": 90,
+  "renderFrames": 89,
   "budget": {
     "particles": 0,
     "canvas": 614400,
@@ -17,15 +17,15 @@
   "metrics": [
     {
       "name": "Nodes",
-      "value": 940
+      "value": 1105
     },
     {
       "name": "TaskDuration",
-      "value": 0.203848
+      "value": 0.1702
     },
     {
       "name": "JSHeapUsedSize",
-      "value": 6849820
+      "value": 7799128
     },
     {
       "name": "JSHeapTotalSize",

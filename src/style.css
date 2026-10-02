@@ -21,6 +21,7 @@ body {
 }
 button,
 input,
+select,
 a {
   -webkit-tap-highlight-color: transparent;
 }
@@ -32,12 +33,14 @@ button {
 button,
 a,
 input,
+select,
 summary {
   outline-offset: 4px;
 }
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
+select:focus-visible,
 summary:focus-visible,
 #world-view:focus-visible {
   outline: 3px solid #b76445;
@@ -218,6 +221,13 @@ h3 {
   margin-top: -10px;
   margin-bottom: 17px;
   min-height: 18px;
+  flex-wrap: wrap;
+}
+.patch-link {
+  min-height: 44px;
+  padding: 8px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .pinch-dot {
   width: 5px;
@@ -687,6 +697,118 @@ dialog h2 {
 .how-to summary {
   cursor: pointer;
   color: #5b6d4a;
+}
+.neighbour-notes {
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.neighbour-notes summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-top: 10px;
+}
+.neighbour-notes > p {
+  color: var(--muted);
+}
+#resident-entries {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+}
+.resident-note {
+  width: 100%;
+  display: flex;
+  gap: 13px;
+  text-align: left;
+  padding: 16px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.resident-mark {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  background: #e6eddb;
+  border-radius: 50%;
+  color: #537147;
+}
+.resident-note strong {
+  display: block;
+  font: 20px var(--serif);
+  margin-bottom: 5px;
+}
+.resident-note > span > span,
+.resident-note small {
+  display: block;
+}
+.resident-note small {
+  color: var(--muted);
+  margin-top: 6px;
+}
+.notebook-label {
+  display: block;
+  font: 11px var(--mono);
+  margin: 19px 0 9px;
+}
+#patch-dialog select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #bac7a9;
+  border-radius: 7px;
+  background: #fffdf5;
+  color: var(--ink);
+  font: 16px var(--sans);
+  padding: 9px;
+}
+.patch-observation {
+  padding: 16px;
+  background: #e9efdf;
+  border-radius: 8px;
+  font: 17px/1.5 var(--serif);
+  margin: 20px 0;
+}
+.patch-meters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin: 0;
+}
+.patch-meters dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+.patch-meters dd {
+  margin: 5px 0 0;
+  font: 21px var(--serif);
+}
+.patch-chemistry,
+.patch-residents {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.patch-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 15px;
+}
+.patch-actions .sprinkle-button {
+  flex: 1;
+}
+.patch-actions .tool-button {
+  min-height: 44px;
+}
+@media (max-width: 420px) {
+  .patch-meters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .canvas-prompt #canvas-hint {
+    flex-basis: calc(100% - 12px);
+  }
 }
 #seed-dialog {
   width: min(470px, calc(100% - 28px));
