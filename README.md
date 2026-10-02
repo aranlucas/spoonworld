@@ -1,0 +1,63 @@
+# Spoonworld
+
+A tiny ingredient ecology toy, served in a ceramic bowl. Sprinkle a pantry ingredient onto a patch and watch the roots, weather, seas, and twelve little sproutlings respond. Follow five field-guide clues to find herb woods, shell sailors, kitchen rain, glowbug meadows, and bubble ferries.
+
+![Spoonworld](evidence/desktop-bubble-ferry.png)
+
+## Run
+
+Requires Node.js 22.12+ or 24+ and npm. No account, backend, AI provider, or API key.
+
+```sh
+npm ci
+npm run build
+npm start
+```
+
+Open **http://127.0.0.1:4188**. The production build precaches all its own assets. Once **Offline ready** appears, reload and play without network access. Service workers require localhost or HTTPS. Development uses `npm run dev`; its unbuilt server does not install the offline cache.
+
+The portable app ZIP includes the built `dist/` directory. Unzip it and run `node scripts/serve.mjs`; no package installation is needed to play that bundle.
+
+## Play
+
+- Pick an ingredient, then tap a patch. Nearby patches receive a lighter dose. **Add a pinch** uses the last chosen patch.
+- **Field guide** gives five gentle clues, then records discoveries and explains their causes.
+- **Undo** restores the exact world before the last ingredient addition, seed change, reset, or import. Keeps twelve snapshots.
+- **Pause** holds the ecology still while you experiment. Decorative movement continues. Opening a notebook or seed dialog also holds the ecology.
+- **Reset** recreates the current seeded island and can be undone. Click the seed name for a different island.
+- **Export/Import** moves a world and its field notes between browsers. Import also retains the exported undo history and puts the previous bowl first in the undo sequence.
+- Keys **1–7** select pantry items. Focus the bowl, use **arrow keys** to choose a patch, and **Enter** to sprinkle. **Space** pauses; **Z** undoes.
+- Sound starts off. The sound button enables short, locally synthesized notes after a user gesture.
+
+All data stays in this browser’s local storage. Ingredients are synthetic; there is no private data access or external service call. This is a whimsical toy, with deliberately simplified fictional ecology.
+
+## Verify
+
+```sh
+npm test
+npx playwright install chromium
+npm run build
+npm run test:browser
+npm run format:check
+```
+
+Browser tests use a single worker and temporary browser contexts. For an installed Chrome, use `PLAYWRIGHT_CHANNEL=chrome npm run test:browser`. The suite starts and stops only its own local server on port 4188.
+
+Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveries, salt stress and water recovery, 3,000 randomized actions, save validation, import/export, corrupt-save recovery, quota failure/retry, exact undo/reset/persistence, offline reload, genuine emulated touch, keyboard/reduced motion, responsive layouts, frame budgets, and axe WCAG A/AA checks. See [QA.md](QA.md) and `evidence/` for measured results and limits.
+
+## Structure and resource bounds
+
+- `src/simulation.js`: pure deterministic state transitions; 61 fixed patches and 12 inhabitants.
+- `src/storage.js`: bounded, validated save schema and recoverable storage operations.
+- `src/renderer.js`: original procedural artwork in one Phaser Canvas scene; native pointer input, a 960×640 canvas, 30 FPS target, at most 48 sprinkle particles.
+- `src/main.js`: DOM controls, notebook, keyboard mapping, fixed one-second ecology clock, persistence. Hidden tabs suspend the world; there is no offline time catch-up.
+- `scripts/build-offline.mjs`: generates a content-versioned precache from every production asset. Only this app’s own cache names are cleaned up.
+- `scripts/serve.mjs`: dependency-free static server with content types and a restrictive content security policy.
+
+Art, ingredient icons, sproutlings, bowl decoration, and sound were made for this project in code. No downloaded art or generated provider assets. Phaser 3.90.0 is pinned as an established 2D runtime; Vite, Playwright, axe, and Prettier are development tools. The lockfile pins all resolved registry packages.
+
+## Hosting configuration
+
+`railway.json` builds the static bundle and runs the server using Railway’s `PORT`, binding to `0.0.0.0`. `wrangler.jsonc` points Cloudflare Workers static assets at `dist/`; Cloudflare Pages can also use build command `npm run build`, output directory `dist`.
+
+No infrastructure has been provisioned and no public release has been performed. Deployment requires a deliberate later action. See [DECISIONS.md](DECISIONS.md) for the research brief and next experiments.

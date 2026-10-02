@@ -1,0 +1,18 @@
+{
+  "status": "blocked",
+  "intendedOwner": "aranlucas",
+  "intendedVisibility": "private",
+  "githubUrl": null,
+  "repositoryCreated": false,
+  "sourcePushed": false,
+  "deployed": false,
+  "blockers": [
+    "GitHub connector has no exposed repository-creation operation",
+    "Computer-use transport closed",
+    "Chrome CDP discovery HTTP 404 and recorded browser WebSocket connection timeout",
+    "Chrome JavaScript through AppleScript is disabled; settings were preserved",
+    "Existing SSH authentication: Permission denied (publickey)"
+  ],
+  "credentialsConfiguredOrTransferred": false,
+  "knownInvalidGhAuthRetried": false
+}

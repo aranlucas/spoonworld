@@ -1,0 +1,14 @@
+[
+  {
+    "surface": "desktop",
+    "violations": []
+  },
+  {
+    "surface": "guide",
+    "violations": []
+  },
+  {
+    "surface": "mobile",
+    "violations": []
+  }
+]
