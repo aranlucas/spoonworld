@@ -41,11 +41,11 @@ A sibling project occupied the initial generic server port during final verifica
 
 ## Publication status and limits
 
-The repository [aranlucas/spoonworld](https://github.com/aranlucas/spoonworld) is **private**, verified through the GitHub connector. The playable implementation is published on `feature/ingredient-ecology` in [draft PR #1](https://github.com/aranlucas/spoonworld/pull/1); the default branch contains a short repository overview. Final PR and source-push status are recorded in `evidence/publication-status.json`.
+The repository [aranlucas/spoonworld](https://github.com/aranlucas/spoonworld) is **private**, verified through the GitHub connector. [Implementation PR #1](https://github.com/aranlucas/spoonworld/pull/1) contains the complete playable prototype and its verification workflow. Final merge and hosted-check evidence is delivered alongside the source archives.
 
 The existing GitHub CLI authentication works through the supported host-permission route. Credentials and browser security settings were neither copied nor configured. No public deployment has been performed. Source and a built portable app are packaged as ZIPs, with deployment-ready Railway and Cloudflare static configuration.
 
-The PR workflow checks its exact head commit with Node 24 on Ubuntu 24.04, one browser worker, and an eight-minute job limit. Its steps install the locked dependencies, check formatting, run unit tests, build the offline bundle, and run the complete browser and accessibility suite using Chromium. Official actions are pinned to immutable commits. Final hosted results are reported with the draft PR.
+The workflow checks the PR’s exact head commit and reruns on pushes to `main`, using Node 24 on Ubuntu 24.04, one browser worker, and an eight-minute job limit. Its steps install the locked dependencies, check formatting, run unit tests, build the offline bundle, and run the complete browser and accessibility suite using Chromium. Official actions are pinned to immutable commits.
 
 Browser verification covers Chrome and Chrome touch emulation. Safari, Firefox, VoiceOver, physical mobile hardware, installation on iOS, storage eviction, prolonged idle sessions, and real deployed hosting have not been tested. Automated accessibility scans complement the implemented keyboard/labels/contrast controls; they do not establish complete screen-reader usability. Offline play needs one successful initial load on localhost or HTTPS. No background time catch-up is performed.
 
