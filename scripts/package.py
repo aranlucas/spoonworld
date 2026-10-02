@@ -53,6 +53,6 @@ artifacts = []
 for file in [output / "spoonworld-source.zip", output / "spoonworld-portable.zip", bundle]:
     artifacts.append({"file": str(file), "bytes": file.stat().st_size, "sha256": hashlib.sha256(file.read_bytes()).hexdigest()})
 publication = json.loads((root / "evidence/publication-status.json").read_text())
-manifest = {"sourceCommit": commit, "githubUrl": publication.get("githubUrl"), "pullRequestUrl": publication.get("pullRequestUrl"), "publicationStatus": publication["status"], "artifacts": artifacts}
+manifest = {"sourceCommit": commit, "githubUrl": publication.get("githubUrl"), "pullRequestUrl": publication.get("pullRequestUrl"), "pullRequestUrls": publication.get("pullRequestUrls", []), "publicationStatus": publication["status"], "artifacts": artifacts}
 (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 print(json.dumps(manifest, indent=2))

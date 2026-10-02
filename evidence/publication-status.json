@@ -13,5 +13,9 @@
   "draft": false,
   "defaultBranch": "main",
   "coreMergeCommit": "8761647bf7e0743f8ebf7be9c3e0360b76fd6c84",
-  "corePostMergeChecks": "https://github.com/aranlucas/spoonworld/actions/runs/36965355801"
+  "corePostMergeChecks": "https://github.com/aranlucas/spoonworld/actions/runs/36965355801",
+  "pullRequestUrls": [
+    "https://github.com/aranlucas/spoonworld/pull/1",
+    "https://github.com/aranlucas/spoonworld/pull/2"
+  ]
 }

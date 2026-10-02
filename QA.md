@@ -45,7 +45,7 @@ The notebook refinement adds deterministic resident observations and shared imme
 
 ## Publication status and limits
 
-The repository [aranlucas/spoonworld](https://github.com/aranlucas/spoonworld) is **private**, verified through the GitHub connector and CLI. [Implementation PR #1](https://github.com/aranlucas/spoonworld/pull/1) merged after review and exact-head hosted checks; its post-merge `main` workflow also passed. The naturalist notebook follows in a separate reviewed PR. Final merge and hosted-check evidence is delivered alongside the source archives.
+The repository [aranlucas/spoonworld](https://github.com/aranlucas/spoonworld) is **private**, verified through the GitHub connector and CLI. [Implementation PR #1](https://github.com/aranlucas/spoonworld/pull/1) merged after review and exact-head hosted checks; its post-merge `main` workflow also passed. [Notebook PR #2](https://github.com/aranlucas/spoonworld/pull/2) contains the tested naturalist refinement. Final merge and hosted-check evidence is delivered alongside the source archives.
 
 The existing GitHub CLI authentication works through the supported host-permission route. Credentials and browser security settings were neither copied nor configured. No public deployment has been performed. Source and a built portable app are packaged as ZIPs, with deployment-ready Railway and Cloudflare static configuration.
 
