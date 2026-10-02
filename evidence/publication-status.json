@@ -1,15 +1,17 @@
 {
-  "status": "private_draft_pr",
+  "status": "private_source_published",
   "owner": "aranlucas",
   "visibility": "private",
   "githubUrl": "https://github.com/aranlucas/spoonworld",
   "repositoryCreated": true,
   "sourcePushed": true,
   "pullRequestUrl": "https://github.com/aranlucas/spoonworld/pull/1",
-  "implementationBranch": "feature/ingredient-ecology",
   "deployed": false,
   "blockers": [],
   "credentialsConfiguredOrTransferred": false,
   "pullRequestNumber": 1,
-  "draft": true
+  "draft": false,
+  "defaultBranch": "main",
+  "coreMergeCommit": "8761647bf7e0743f8ebf7be9c3e0360b76fd6c84",
+  "corePostMergeChecks": "https://github.com/aranlucas/spoonworld/actions/runs/36965355801"
 }

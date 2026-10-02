@@ -292,10 +292,32 @@ test("desktop, guide, and mobile have no serious accessibility violations", asyn
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
       .analyze()),
   });
+  await page.locator(".neighbour-notes summary").click();
+  reports.push({
+    surface: "neighbours",
+    ...(await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze()),
+  });
+  await page.keyboard.press("Escape");
+  await page.locator("#inspect").click();
+  reports.push({
+    surface: "patch notebook",
+    ...(await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze()),
+  });
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 390, height: 844 });
   reports.push({
     surface: "mobile",
+    ...(await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze()),
+  });
+  await page.locator("#inspect").click();
+  reports.push({
+    surface: "mobile patch notebook",
     ...(await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
       .analyze()),
@@ -327,6 +349,111 @@ test("small phone and tablet layouts preserve usable controls", async ({
     await expect(page.locator("#sprinkle")).toBeVisible();
   }
   expect((await snapshot(page)).doses).toBe(3);
+});
+test("patch notebook allows precise text-only play, explains stress, and restores exact state", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.locator("#inspect").click();
+  await expect(page.locator("#patch-select option")).toHaveCount(61);
+  const before = await snapshot(page);
+  await page.waitForTimeout(1200);
+  expect(await snapshot(page)).toEqual(before);
+  await page.locator("#patch-select").selectOption("30");
+  await page.locator("#patch-ingredient").selectOption("herbs");
+  await page.locator("#patch-sprinkle").click();
+  await page.locator("#patch-ingredient").selectOption("salt");
+  await page.locator("#patch-sprinkle").click();
+  await page.locator("#patch-sprinkle").click();
+  await expect(page.locator("#patch-observation")).toContainText(
+    "Roots are wilting",
+  );
+  const salted = await snapshot(page);
+  await page.locator("#patch-ingredient").selectOption("water");
+  await page.locator("#patch-sprinkle").click();
+  await expect(page.locator("#patch-observation")).toContainText(
+    "Roots are growing",
+  );
+  await expect(page.locator("#patch-sprinkle")).toBeFocused();
+  await page.locator("#patch-undo").click();
+  expect(await snapshot(page)).toEqual(salted);
+  await expect(page.locator("#patch-observation")).toContainText(
+    "Roots are wilting",
+  );
+  await page.screenshot({
+    path: "evidence/patch-notebook.png",
+    fullPage: true,
+  });
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#inspect")).toBeFocused();
+  await expect(page.locator('[data-ingredient="water"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});
+test("notebook undo rebuilds patch labels when it restores a different seed", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await pause(page);
+  const before = await snapshot(page);
+  await page.locator("#seed-open").click();
+  await page.locator("#seed-input").fill("wild-thyme");
+  await page.locator("#seed-form button[type=submit]").click();
+  await page.locator("#inspect").click();
+  await page.locator("#patch-undo").click();
+  expect(await snapshot(page)).toEqual(before);
+  expect(await page.locator("#patch-select option").allTextContents()).toEqual(
+    before.cells.map(
+      (c) =>
+        `Patch ${c.id + 1} · ${c.land ? "meadow" : "sea"} (${c.q}, ${c.r})`,
+    ),
+  );
+});
+test("named sproutling notes match immediate ferry mode and link to a home patch on mobile", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await pause(page);
+  await add(page, "lemon");
+  await add(page, "soda");
+  const w = await snapshot(page);
+  await page.locator(".guide-button").first().click();
+  await page.locator(".neighbour-notes summary").click();
+  await expect(page.locator(".resident-note")).toHaveCount(12);
+  await expect(page.locator(".resident-note").first()).toContainText(
+    "Riding a bubble ferry",
+  );
+  await page.locator(".resident-note").first().click();
+  await expect(page.locator("#guide-dialog")).not.toBeVisible();
+  await expect(page.locator("#patch-dialog")).toBeVisible();
+  await expect(page.locator("#patch-select")).toHaveValue(
+    String(w.residents[0].cell),
+  );
+  await expect(page.locator("#patch-residents")).toContainText("Pip");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: "evidence/mobile-notebook.png",
+    fullPage: true,
+  });
+  await page.locator("#patch-ingredient").selectOption("water");
+  await page.locator("#patch-sprinkle").click();
+  expect((await snapshot(page)).doses).toBe(w.doses + 1);
+  await page.locator("#patch-undo").click();
+  expect(await snapshot(page)).toEqual(w);
+  await expect(page.locator("#patch-sprinkle")).toBeVisible();
+  expect(
+    (await page.locator("#patch-sprinkle").boundingBox()).height,
+  ).toBeGreaterThanOrEqual(44);
+  await page.screenshot({
+    path: "evidence/mobile-notebook-actions.png",
+    fullPage: true,
+  });
 });
 test("runtime clock advances and the renderer respects its bounded frame budget", async ({
   page,

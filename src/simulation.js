@@ -277,6 +277,15 @@ export function weather(world) {
     text: "A lovely day for little experiments.",
   };
 }
+export function residentMode(world, resident) {
+  return world.fizz > 10
+    ? "flying"
+    : world.salinity >= 30 && resident.id % 3 === 0
+      ? "sailing"
+      : world.cells[resident.cell].herbs > 45
+        ? "nesting"
+        : "wandering";
+}
 export function stepWorld(previous, steps = 1) {
   if (!Number.isInteger(steps) || steps < 0 || steps > 10000)
     throw new Error("Invalid simulation step count.");
@@ -306,14 +315,7 @@ export function stepWorld(previous, steps = 1) {
     }
     for (const resident of world.residents) {
       const here = world.cells[resident.cell];
-      resident.mood =
-        world.fizz > 10
-          ? "flying"
-          : world.salinity >= 30 && resident.id % 3 === 0
-            ? "sailing"
-            : here.herbs > 45
-              ? "nesting"
-              : "wandering";
+      resident.mood = residentMode(world, resident);
       if (world.tick % 8 === resident.id % 8) {
         const neighbours = world.cells.filter(
           (c) => c.land && hexDistance(c, here) <= 1,

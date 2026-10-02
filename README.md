@@ -24,6 +24,8 @@ The portable app ZIP includes the built `dist/` directory. Unzip it and run `nod
 
 - Pick an ingredient, then tap a patch. Nearby patches receive a lighter dose. **Add a pinch** uses the last chosen patch.
 - **Field guide** gives five gentle clues, then records discoveries and explains their causes.
+- **Read this patch** opens a text notebook for all 61 patches. Pick a patch, read its moisture and salt conditions, sprinkle with native controls, and undo to compare. Ecology pauses while it is open.
+- **Meet your twelve neighbours** in the field guide gives each sproutling a name and a short observation based on its current habitat or travel mode. Visit its home patch straight from the note.
 - **Undo** restores the exact world before the last ingredient addition, seed change, reset, or import. Keeps twelve snapshots.
 - **Pause** holds the ecology still while you experiment. Decorative movement continues. Opening a notebook or seed dialog also holds the ecology.
 - **Reset** recreates the current seeded island and can be undone. Click the seed name for a different island.
@@ -53,6 +55,7 @@ Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveri
 - `src/storage.js`: bounded, validated save schema and recoverable storage operations.
 - `src/renderer.js`: original procedural artwork in one Phaser Canvas scene; native pointer input, a 960×640 canvas, 30 FPS target, at most 48 sprinkle particles.
 - `src/main.js`: DOM controls, notebook, keyboard mapping, fixed one-second ecology clock, persistence. Hidden tabs suspend the world; there is no offline time catch-up.
+- `src/naturalist.js`: named residents and readable patch observations derived from current simulation rules. No additional saved state or text generation service.
 - `scripts/build-offline.mjs`: generates a content-versioned precache from every production asset. Only this app’s own cache names are cleaned up.
 - `scripts/serve.mjs`: dependency-free static server with content types and a restrictive content security policy.
 

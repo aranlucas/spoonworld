@@ -13,6 +13,12 @@ import { loadSave, saveWorld, parseSave, serializeSave } from "./storage.js";
 import { icon } from "./icons.js";
 import { mountWorld } from "./renderer.js";
 import { createSound } from "./audio.js";
+import {
+  patchName,
+  patchObservation,
+  residentName,
+  residentObservation,
+} from "./naturalist.js";
 
 const $ = (selector) => document.querySelector(selector);
 let storage;
@@ -41,7 +47,7 @@ document.querySelector("#app").innerHTML = `
       <section class="world-section" aria-label="Your tiny world">
         <div class="world-top"><span class="world-label"><i></i> YOUR LITTLE WORLD</span><span class="day-label">DAY <b id="day">01</b> <span id="day-period">· morning</span></span></div>
         <div id="world-view" tabindex="0" role="group" aria-label="Ingredient bowl. Use arrow keys to choose a patch, then Enter to add the selected ingredient."></div>
-        <div class="canvas-prompt"><span class="pinch-dot"></span><span id="canvas-hint">Choose an ingredient, then tap the bowl.</span></div>
+        <div class="canvas-prompt"><span class="pinch-dot"></span><span id="canvas-hint">Choose an ingredient, then tap the bowl.</span><button id="inspect" class="patch-link">Read this patch <span aria-hidden="true">↗</span></button></div>
         <div class="world-toolbar">
           <div class="tool-cluster"><button id="undo" class="tool-button" title="Undo last pinch (Z)" disabled>${icon("undo")}<span>Undo</span></button><button id="pause" class="tool-button" title="Pause or resume (Space)" aria-pressed="false">${icon("pause")}<span>Pause</span></button><button id="reset" class="tool-button" title="Reset this seeded world">${icon("reset")}<span>Reset</span></button></div>
           <button id="sound" class="tool-button sound-button" aria-pressed="false" title="Enable gentle sound">${icon("sound")}<span>Sound off</span></button>
@@ -62,7 +68,13 @@ document.querySelector("#app").innerHTML = `
   </main>
   <dialog id="guide-dialog" aria-labelledby="guide-title"><div class="dialog-top"><span class="eyebrow">A NATURALIST’S KITCHEN NOTEBOOK</span><button class="icon-button dialog-close" aria-label="Close field guide">${icon("close")}</button></div><h2 id="guide-title">The unexpected field guide.</h2><p class="dialog-subtitle">Follow a clue. Try a combination. Let the bowl surprise you.</p><div id="guide-progress"></div><div id="guide-entries"></div><details class="how-to"><summary>A few gentle instructions</summary><p>Choose an ingredient, then tap a patch in the bowl. Nearby patches get a lighter dose. The large button uses your last chosen patch. Worlds evolve once a second. Pause holds the ecology still while you experiment.</p><p>On a keyboard: 1–7 select ingredients, Enter on the bowl sprinkles, arrow keys choose a patch, Space pauses, and Z undoes. Undo restores the full world before your last pinch, including its field notes. Reset starts this seed again; it can be undone. Change seeds to meet a different island.</p><p>Everything stays on this device. Export a world to keep it or move it to another browser. After the offline-ready badge appears, the installed app or this URL works without a connection. This is a whimsical ecology, not cooking or science advice.</p></details></dialog>
   <dialog id="seed-dialog" aria-labelledby="seed-title"><div class="dialog-top"><span class="eyebrow">ONE BOWL, MANY WORLDS</span><button class="icon-button dialog-close" aria-label="Close seed settings">${icon("close")}</button></div><h2 id="seed-title">A fresh little beginning.</h2><p class="dialog-subtitle">The same seed grows the same island. Your current world can be restored with Undo.</p><form id="seed-form"><label for="seed-input">Name your world seed</label><input id="seed-input" maxlength="40" required autocomplete="off"><div class="seed-presets"><button type="button" data-seed="lemon-garden">lemon-garden</button><button type="button" data-seed="sunday-soup">sunday-soup</button><button type="button" data-seed="wild-thyme">wild-thyme</button></div><button class="sprinkle-button" type="submit">Grow this world <span>↗</span></button></form></dialog>
+  <dialog id="patch-dialog" aria-labelledby="patch-title"><div class="dialog-top"><span class="eyebrow">LOOK A LITTLE CLOSER</span><button class="icon-button dialog-close" aria-label="Close patch notebook">${icon("close")}</button></div><h2 id="patch-title">The patch notebook.</h2><p class="dialog-subtitle">Observe a cause. Try a pinch. Compare. Ecology rests while this notebook is open.</p><label class="notebook-label" for="patch-select">Choose a patch</label><select id="patch-select"></select><p id="patch-observation" class="patch-observation" role="status"></p><dl id="patch-meters" class="patch-meters"></dl><p id="patch-chemistry" class="patch-chemistry"></p><p id="patch-residents" class="patch-residents"></p><label class="notebook-label" for="patch-ingredient">Try an ingredient here</label><select id="patch-ingredient">${INGREDIENTS.map((i) => `<option value="${i.id}">${i.name}</option>`).join("")}</select><div class="patch-actions"><button id="patch-sprinkle" class="sprinkle-button">Add a pinch</button><button id="patch-undo" class="tool-button">${icon("undo")} Undo</button></div></dialog>
   <div id="toast" role="status" aria-live="polite" hidden></div>`;
+
+$("#guide-entries").insertAdjacentHTML(
+  "afterend",
+  `<details class="neighbour-notes"><summary>Meet your twelve neighbours</summary><p>Their notes follow the same local rules as the bowl. Visit a home patch to try something new.</p><ol id="resident-entries"></ol></details>`,
+);
 
 function pushHistory() {
   history.push(structuredClone(world));
@@ -111,6 +123,7 @@ function updateUI() {
   $(".guide-count").textContent = `${world.discovered.length}/5`;
   $("#undo").disabled = !history.length;
   $("#world-summary").textContent = describeWorld(world);
+  if ($("#patch-dialog").open) updatePatch();
 }
 function selectIngredient(id) {
   ingredient = id;
@@ -125,6 +138,8 @@ function selectIngredient(id) {
     `Add ${id === "water" ? "a splash" : "a pinch"} of ${item.name.toLowerCase()}`;
   $("#canvas-hint").textContent =
     `Tap a patch to ${id === "water" ? "splash water" : `sprinkle ${item.name.toLowerCase()}`}.`;
+  $("#patch-ingredient").value = id;
+  $("#patch-sprinkle").textContent = $("#sprinkle span").textContent;
 }
 function sprinkle(id = target) {
   pushHistory();
@@ -149,6 +164,66 @@ function setTarget(id) {
     `onto ${c.land ? "a meadow" : "a sea"} patch (${c.q}, ${c.r}) · or tap the bowl`;
   renderer.setTarget(id);
 }
+function updatePatch() {
+  if ($("#patch-select").dataset.seed !== world.seed) {
+    $("#patch-select").replaceChildren(
+      ...world.cells.map((cell) => {
+        const option = document.createElement("option");
+        option.value = cell.id;
+        option.textContent = patchName(cell);
+        return option;
+      }),
+    );
+    $("#patch-select").dataset.seed = world.seed;
+  }
+  const cell = world.cells[target];
+  $("#patch-select").value = String(target);
+  $("#patch-observation").textContent = patchObservation(world, cell);
+  $("#patch-meters").innerHTML = [
+    ["Herbs", "herbs"],
+    ["Moisture", "moisture"],
+    ["Local salt", "salt"],
+    ["Sweetness", "sugar"],
+    ["Acidity", "acid"],
+    ["Soda", "soda"],
+    ["Flowers", "flowers"],
+  ]
+    .map(
+      ([label, key]) =>
+        `<div><dt>${label}</dt><dd>${Math.round(cell[key])}%</dd></div>`,
+    )
+    .join("");
+  $("#patch-chemistry").textContent =
+    cell.acid >= 4
+      ? "A little acidity is waiting here. Try baking soda on this same patch."
+      : cell.soda >= 4
+        ? "Baking soda is waiting here. Try lemon on this same patch."
+        : world.fizz > 10
+          ? "The bowl is fizzing. Sproutlings can ride the bubbles until the fizz fades."
+          : "Lemon and baking soda react when they meet on a patch or its neighbours.";
+  const names = world.residents
+    .filter((r) => r.cell === target)
+    .map(residentName);
+  $("#patch-residents").textContent = names.length
+    ? `Home patch for ${names.join(", ")}. Sailors and ferry riders can be away exploring.`
+    : "No sproutlings call this patch home just now. They look for kind meadows.";
+  $("#patch-undo").disabled = !history.length;
+}
+function openPatch(id = target) {
+  setTarget(id);
+  updatePatch();
+  $("#patch-dialog").showModal();
+}
+$("#inspect").addEventListener("click", () => openPatch());
+$("#patch-select").addEventListener("change", (event) => {
+  setTarget(Number(event.target.value));
+  updatePatch();
+});
+$("#patch-ingredient").addEventListener("change", (event) =>
+  selectIngredient(event.target.value),
+);
+$("#patch-sprinkle").addEventListener("click", () => sprinkle());
+$("#patch-undo").addEventListener("click", () => undo());
 const renderer = mountWorld("world-view", {
   getWorld: () => world,
   onSprinkle: sprinkle,
@@ -165,6 +240,7 @@ $("#sprinkle").addEventListener("click", () => sprinkle());
 function undo() {
   if (!history.length) return;
   world = history.pop();
+  setTarget(target);
   updateUI();
   persist();
   notify("One little step back. Your previous world is restored.");
@@ -207,6 +283,20 @@ function openGuide() {
     const found = world.discovered.includes(g.id);
     return `<article class="guide-entry ${found ? "discovered" : ""}"><span class="field-art">${icon(g.glyph)}</span><div><span class="eyebrow">FIELD NOTE ${String(index + 1).padStart(2, "0")} · ${found ? "DISCOVERED" : "A CLUE"}</span><h3>${found ? g.title : ["A place to put down roots", "A well-seasoned sea", "Weather from the pantry", "A meadow with its own lights", "Something lighter than air"][index]}</h3><p>${found ? g.text : g.hint}</p>${found ? `<span class="recipe">${g.recipe}</span>` : ""}</div>${found ? icon("check", "entry-check") : ""}</article>`;
   }).join("");
+  $("#resident-entries").replaceChildren(
+    ...world.residents.map((resident) => {
+      const row = document.createElement("li"),
+        button = document.createElement("button");
+      button.className = "resident-note";
+      button.innerHTML = `<span class="resident-mark" aria-hidden="true">${icon("leaf")}</span><span><strong>${residentName(resident)}</strong><span>${residentObservation(world, resident)}</span><small>Visit home patch ${resident.cell + 1} <span aria-hidden="true">↗</span></small></span>`;
+      button.addEventListener("click", () => {
+        $("#guide-dialog").close();
+        openPatch(resident.cell);
+      });
+      row.append(button);
+      return row;
+    }),
+  );
   $("#guide-dialog").showModal();
 }
 document

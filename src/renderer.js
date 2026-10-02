@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { hexDistance } from "./simulation.js";
+import { hexDistance, residentMode } from "./simulation.js";
 
 export const project = (cell) => ({
   x: 480 + (cell.q + cell.r / 2) * 48,
@@ -516,12 +516,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
     }
     w.residents.forEach((r) => {
       const p = project(w.cells[r.cell]);
-      const mode =
-        w.fizz > 10
-          ? "flying"
-          : w.salinity >= 30 && r.id % 3 === 0
-            ? "sailing"
-            : r.mood;
+      const mode = residentMode(w, r);
       const a = r.id * 0.5236 + t * 0.06;
       const x =
         mode === "sailing"
