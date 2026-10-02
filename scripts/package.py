@@ -16,7 +16,7 @@ subprocess.run(["git", "diff", "--cached", "--exit-code"], cwd=root, check=True,
 commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
 files = subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\0")
 bundle = output / "spoonworld.git.bundle"
-subprocess.run(["git", "bundle", "create", str(bundle), "--all"], cwd=root, check=True)
+subprocess.run(["git", "bundle", "create", str(bundle), "main", "feature/ingredient-ecology"], cwd=root, check=True)
 with zipfile.ZipFile(output / "spoonworld-source.zip", "w", zipfile.ZIP_DEFLATED) as archive:
     for name in files:
         if name:
