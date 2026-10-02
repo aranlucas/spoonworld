@@ -37,6 +37,16 @@ test("desktop boots without errors or third-party requests; screenshot", async (
     path: "evidence/desktop-initial.png",
     fullPage: true,
   });
+  await pause(page);
+  const bowl = await page.locator("canvas").boundingBox();
+  await page.mouse.click(
+    bowl.x + bowl.width * 0.5,
+    bowl.y + bowl.height * (307 / 640),
+  );
+  expect((await snapshot(page)).doses).toBe(1);
+  await expect(page.locator("#sound")).toHaveAttribute("aria-pressed", "false");
+  await page.locator("#sound").click();
+  await expect(page.locator("#sound")).toHaveAttribute("aria-pressed", "true");
   expect(errors).toEqual([]);
   expect(external).toEqual([]);
   expect(
@@ -65,6 +75,7 @@ test("all five goals work through the UI; illustrated guide screenshot", async (
   const w = await snapshot(page);
   expect(w.discovered).toHaveLength(5);
   expect(w.fizz).toBeGreaterThan(10);
+  await expect(page.locator("#toast")).not.toBeVisible();
   await page.screenshot({
     path: "evidence/desktop-bubble-ferry.png",
     fullPage: true,
@@ -226,6 +237,7 @@ test.describe("touch device", () => {
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+    await expect(page.locator("#toast")).not.toBeVisible();
     await page.screenshot({ path: "evidence/mobile.png", fullPage: true });
     await page.locator(".guide-button").first().click();
     await expect(page.locator("#guide-dialog")).toBeVisible();

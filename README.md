@@ -2,6 +2,8 @@
 
 A tiny ingredient ecology toy, served in a ceramic bowl. Sprinkle a pantry ingredient onto a patch and watch the roots, weather, seas, and twelve little sproutlings respond. Follow five field-guide clues to find herb woods, shell sailors, kitchen rain, glowbug meadows, and bubble ferries.
 
+The full prototype is on `feature/ingredient-ecology` while its draft PR is under review. The private repository’s `main` branch contains a short overview. To obtain the implementation, clone with `git clone --branch feature/ingredient-ecology https://github.com/aranlucas/spoonworld.git`.
+
 ![Spoonworld](evidence/desktop-bubble-ferry.png)
 
 ## Run
@@ -61,3 +63,5 @@ Art, ingredient icons, sproutlings, bowl decoration, and sound were made for thi
 `railway.json` builds the static bundle and runs the server using Railway’s `PORT`, binding to `0.0.0.0`. `wrangler.jsonc` points Cloudflare Workers static assets at `dist/`; Cloudflare Pages can also use build command `npm run build`, output directory `dist`.
 
 No infrastructure has been provisioned and no public release has been performed. Deployment requires a deliberate later action. See [DECISIONS.md](DECISIONS.md) for the research brief and next experiments.
+
+To regenerate the portable source, Git bundle, and built-app archives from a clean committed checkout, run `npm run build` followed by `python3 scripts/package.py` (Python 3 and Git are needed only for packaging).

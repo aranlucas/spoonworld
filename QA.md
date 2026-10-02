@@ -7,7 +7,7 @@ Spoonworld is an implemented, playable prototype. The production build, determin
 | Check                                            | Result                                                                               |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------ |
 | `npm test`                                       | **9 / 9 passed**                                                                     |
-| `PLAYWRIGHT_CHANNEL=chrome npm run test:browser` | **14 / 14 passed**, one worker, 14.0 seconds                                         |
+| `PLAYWRIGHT_CHANNEL=chrome npm run test:browser` | **14 / 14 passed**, one worker, 22.9 seconds                                         |
 | `npm run build`                                  | **Passed**, all six app routes/assets precached                                      |
 | `npm run format:check`                           | **Passed**                                                                           |
 | Desktop, guide, mobile axe WCAG A/AA             | **0 violations** in each tested surface                                              |
@@ -18,7 +18,7 @@ Spoonworld is an implemented, playable prototype. The production build, determin
 
 The simulation stress test performed **3,000 seeded random ingredient actions and 9,000 ecology ticks**, validating the entire state after each action. Patch and resident counts remain fixed at 61 and 12; event history is capped at six, undo history at twelve, values at 0–100, and visual sprinkle particles at 48. The serialized current world stayed below 18 kB in the stress test.
 
-The short runtime sample used **Chrome 154.0.8037.95** on this Mac: 3 ticks and 89 rendered frames in 3,009 ms, with approximately **8.3 MB of used JavaScript heap** at the sampled point. Rendering targets 30 FPS on one 960×640 Canvas. This is a three-second sample, not a multi-hour memory or CPU soak; see `evidence/runtime-budget.json` for exact metrics.
+The short runtime sample used **Chrome 154.0.8037.95** on this Mac: 3 ticks and 90 rendered frames in 3,007 ms, with approximately **6.8 MB of used JavaScript heap** at the sampled point. Rendering targets 30 FPS on one 960×640 Canvas. This is a three-second sample, not a multi-hour memory or CPU soak; see `evidence/runtime-budget.json` for exact metrics.
 
 ## Evidence
 
@@ -41,11 +41,11 @@ A sibling project occupied the initial generic server port during final verifica
 
 ## Publication status and limits
 
-**No GitHub repository was created or pushed, and no public deployment was performed.**
+The repository [aranlucas/spoonworld](https://github.com/aranlucas/spoonworld) is **private**, verified through the GitHub connector. The playable implementation is prepared on `feature/ingredient-ecology` for a meaningful draft PR; the default branch contains a short repository overview. Final PR and source-push status are recorded in `evidence/publication-status.json`.
 
-The GitHub connector successfully identified the authenticated account as `aranlucas`, but its exposed tools have no repository-creation operation. Browser tooling was unavailable (`cua_repl`: transport closed). The existing Chrome CDP discovery returned HTTP 404, and its recorded browser WebSocket connection timed out. A separate dedicated Chrome window opened successfully, but executing form inspection through AppleScript was disabled. That task-created window was closed. Existing SSH authentication returned `Permission denied (publickey)`. The known-invalid `gh` authentication was not retried; credentials and browser security settings were neither copied nor configured.
+The existing GitHub CLI authentication works through the supported host-permission route. Credentials and browser security settings were neither copied nor configured. No public deployment has been performed. Source and a built portable app are packaged as ZIPs, with deployment-ready Railway and Cloudflare static configuration.
 
-Source and a built portable app are delivered as ZIPs, with deployment-ready Railway and Cloudflare static configuration. The parent can create a private repository and push the included committed source once a working publication route is available.
+The PR workflow checks its exact head commit with Node 24 on Ubuntu 24.04, one browser worker, and an eight-minute job limit. Its steps install the locked dependencies, check formatting, run unit tests, build the offline bundle, and run the complete browser and accessibility suite using Chromium. Official actions are pinned to immutable commits. Final hosted results are reported with the draft PR.
 
 Browser verification covers Chrome and Chrome touch emulation. Safari, Firefox, VoiceOver, physical mobile hardware, installation on iOS, storage eviction, prolonged idle sessions, and real deployed hosting have not been tested. Automated accessibility scans complement the implemented keyboard/labels/contrast controls; they do not establish complete screen-reader usability. Offline play needs one successful initial load on localhost or HTTPS. No background time catch-up is performed.
 

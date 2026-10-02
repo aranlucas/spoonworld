@@ -1,18 +1,13 @@
 {
-  "status": "blocked",
-  "intendedOwner": "aranlucas",
-  "intendedVisibility": "private",
-  "githubUrl": null,
-  "repositoryCreated": false,
+  "status": "private_repository_created",
+  "owner": "aranlucas",
+  "visibility": "private",
+  "githubUrl": "https://github.com/aranlucas/spoonworld",
+  "repositoryCreated": true,
   "sourcePushed": false,
+  "pullRequestUrl": null,
+  "implementationBranch": "feature/ingredient-ecology",
   "deployed": false,
-  "blockers": [
-    "GitHub connector has no exposed repository-creation operation",
-    "Computer-use transport closed",
-    "Chrome CDP discovery HTTP 404 and recorded browser WebSocket connection timeout",
-    "Chrome JavaScript through AppleScript is disabled; settings were preserved",
-    "Existing SSH authentication: Permission denied (publickey)"
-  ],
-  "credentialsConfiguredOrTransferred": false,
-  "knownInvalidGhAuthRetried": false
+  "blockers": [],
+  "credentialsConfiguredOrTransferred": false
 }
