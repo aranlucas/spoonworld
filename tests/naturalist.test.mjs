@@ -46,6 +46,7 @@ test("patch notes explain the actual growth thresholds without mutating a save",
   const w = createWorld(),
     c = w.cells[30],
     before = structuredClone(w);
+
   assert.match(patchObservation(w, c), /Roots are growing/);
   assert.deepEqual(w, before);
   c.moisture = 25;

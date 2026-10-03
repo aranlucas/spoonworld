@@ -2,26 +2,34 @@
 export function createSound() {
   let context,
     enabled = false;
+
   return {
     async toggle() {
       enabled = !enabled;
+
       if (enabled) {
         const Audio = window.AudioContext || window.webkitAudioContext;
+
         if (!Audio) {
           enabled = false;
+
           return false;
         }
+
         context ??= new Audio();
         await context.resume();
       }
+
       return enabled;
     },
     play(index = 0) {
       if (!enabled || !context) return;
       const now = context.currentTime;
+
       for (let i = 0; i < 2; i++) {
         const oscillator = context.createOscillator(),
           gain = context.createGain();
+
         oscillator.type = "sine";
         oscillator.frequency.value =
           [261.63, 293.66, 329.63, 392, 440, 493.88, 523.25][index % 7] *

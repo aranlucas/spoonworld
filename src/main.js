@@ -21,20 +21,26 @@ import {
 } from "./naturalist.js";
 
 const $ = (selector) => document.querySelector(selector);
+
 let storage;
+
 try {
   storage = window.localStorage;
 } catch {
   storage = null;
 }
+
 const saved = loadSave(storage);
+
 let world = saved.world || createWorld(),
   history = saved.history || [],
   ingredient = "herbs",
   target = 30,
   paused = false,
   saving = true;
+
 const sound = createSound();
+
 document.querySelector("#app").innerHTML = `
   <header class="site-header">
     <a class="brand" href="/" aria-label="Spoonworld home"><span class="brand-mark">${icon("spoon")}</span>Spoonworld</a>
@@ -78,8 +84,10 @@ $("#guide-entries").insertAdjacentHTML(
 
 function pushHistory() {
   history.push(structuredClone(world));
+
   if (history.length > MAX_HISTORY) history.shift();
 }
+
 function persist() {
   saving = saveWorld(storage, world, history);
   $("#save-status").textContent = saving
@@ -88,7 +96,9 @@ function persist() {
   $("#save-status").classList.toggle("save-failed", !saving);
   $("#save-retry").hidden = saving;
 }
+
 let toastTimer;
+
 function notify(text) {
   $("#toast").textContent = text;
   $("#toast").hidden = false;
@@ -98,6 +108,7 @@ function notify(text) {
   }, 4500);
   $("#announcement").textContent = text;
 }
+
 function updateUI() {
   const w = weather(world);
   $("#day").textContent = String(Math.floor(world.tick / 40) + 1).padStart(
@@ -109,6 +120,7 @@ function updateUI() {
   $("#weather-symbol").textContent = w.symbol;
   $("#weather-name").textContent = w.name;
   $("#weather-note").textContent = w.text;
+
   for (const [name, key] of [
     ["heat", "heat"],
     ["humidity", "humidity"],
@@ -117,14 +129,17 @@ function updateUI() {
     $(`#${name}-value`).textContent = `${Math.round(world[key])}%`;
     $(`#${name}-bar`).style.width = `${world[key]}%`;
   }
+
   $("#observation").textContent =
     world.events[0]?.text || "The bowl is quietly growing.";
   $("#seed-name").textContent = world.seed;
   $(".guide-count").textContent = `${world.discovered.length}/5`;
   $("#undo").disabled = !history.length;
   $("#world-summary").textContent = describeWorld(world);
+
   if ($("#patch-dialog").open) updatePatch();
 }
+
 function selectIngredient(id) {
   ingredient = id;
   const item = INGREDIENTS.find((i) => i.id === id);
@@ -141,6 +156,7 @@ function selectIngredient(id) {
   $("#patch-ingredient").value = id;
   $("#patch-sprinkle").textContent = $("#sprinkle span").textContent;
 }
+
 function sprinkle(id = target) {
   pushHistory();
   const before = world.discovered.length;
@@ -151,12 +167,14 @@ function sprinkle(id = target) {
   sound.play(INGREDIENTS.indexOf(item));
   updateUI();
   persist();
+
   if (world.discovered.length > before)
     notify(
       `New field note: ${GUIDE.find((g) => g.id === world.discovered.at(-1)).title}.`,
     );
   else $("#announcement").textContent = world.events[0].text;
 }
+
 function setTarget(id) {
   target = id;
   const c = world.cells[id];
@@ -164,6 +182,7 @@ function setTarget(id) {
     `onto ${c.land ? "a meadow" : "a sea"} patch (${c.q}, ${c.r}) · or tap the bowl`;
   renderer.setTarget(id);
 }
+
 function updatePatch() {
   if ($("#patch-select").dataset.seed !== world.seed) {
     $("#patch-select").replaceChildren(
@@ -171,11 +190,13 @@ function updatePatch() {
         const option = document.createElement("option");
         option.value = cell.id;
         option.textContent = patchName(cell);
+
         return option;
       }),
     );
     $("#patch-select").dataset.seed = world.seed;
   }
+
   const cell = world.cells[target];
   $("#patch-select").value = String(target);
   $("#patch-observation").textContent = patchObservation(world, cell);
@@ -201,34 +222,44 @@ function updatePatch() {
         : world.fizz > 10
           ? "The bowl is fizzing. Sproutlings can ride the bubbles until the fizz fades."
           : "Lemon and baking soda react when they meet on a patch or its neighbours.";
+
   const names = world.residents
     .filter((r) => r.cell === target)
     .map(residentName);
+
   $("#patch-residents").textContent = names.length
     ? `Home patch for ${names.join(", ")}. Sailors and ferry riders can be away exploring.`
     : "No sproutlings call this patch home just now. They look for kind meadows.";
   $("#patch-undo").disabled = !history.length;
 }
+
 function openPatch(id = target) {
   setTarget(id);
   updatePatch();
   $("#patch-dialog").showModal();
 }
+
 $("#inspect").addEventListener("click", () => openPatch());
+
 $("#patch-select").addEventListener("change", (event) => {
   setTarget(Number(event.target.value));
   updatePatch();
 });
+
 $("#patch-ingredient").addEventListener("change", (event) =>
   selectIngredient(event.target.value),
 );
+
 $("#patch-sprinkle").addEventListener("click", () => sprinkle());
+
 $("#patch-undo").addEventListener("click", () => undo());
+
 const renderer = mountWorld("world-view", {
   getWorld: () => world,
   onSprinkle: sprinkle,
   onTarget: (id) => setTarget(id),
 });
+
 document
   .querySelectorAll(".ingredient")
   .forEach((button) =>
@@ -236,7 +267,9 @@ document
       selectIngredient(button.dataset.ingredient),
     ),
   );
+
 $("#sprinkle").addEventListener("click", () => sprinkle());
+
 function undo() {
   if (!history.length) return;
   world = history.pop();
@@ -245,7 +278,9 @@ function undo() {
   persist();
   notify("One little step back. Your previous world is restored.");
 }
+
 $("#undo").addEventListener("click", undo);
+
 function togglePause() {
   paused = !paused;
   $("#pause").setAttribute("aria-pressed", String(paused));
@@ -257,7 +292,9 @@ function togglePause() {
       : "Your world is growing again.",
   );
 }
+
 $("#pause").addEventListener("click", togglePause);
+
 $("#reset").addEventListener("click", () => {
   pushHistory();
   world = createWorld(world.seed);
@@ -266,27 +303,32 @@ $("#reset").addEventListener("click", () => {
   persist();
   notify("A fresh bowl, with the same seed. Undo brings the old one back.");
 });
+
 $("#sound").addEventListener("click", async () => {
   try {
     const enabled = await sound.toggle();
     $("#sound").setAttribute("aria-pressed", String(enabled));
     $("#sound span").textContent = `Sound ${enabled ? "on" : "off"}`;
+
     if (enabled) sound.play(0);
   } catch {
     notify("Sound is unavailable in this browser. The bowl is still playable.");
   }
 });
+
 function openGuide() {
   $("#guide-progress").innerHTML =
     `<span>${world.discovered.length} of 5 wonders found</span><span class="progress-dots">${GUIDE.map((g) => `<i class="${world.discovered.includes(g.id) ? "found" : ""}"></i>`).join("")}</span>`;
   $("#guide-entries").innerHTML = GUIDE.map((g, index) => {
     const found = world.discovered.includes(g.id);
+
     return `<article class="guide-entry ${found ? "discovered" : ""}"><span class="field-art">${icon(g.glyph)}</span><div><span class="eyebrow">FIELD NOTE ${String(index + 1).padStart(2, "0")} · ${found ? "DISCOVERED" : "A CLUE"}</span><h3>${found ? g.title : ["A place to put down roots", "A well-seasoned sea", "Weather from the pantry", "A meadow with its own lights", "Something lighter than air"][index]}</h3><p>${found ? g.text : g.hint}</p>${found ? `<span class="recipe">${g.recipe}</span>` : ""}</div>${found ? icon("check", "entry-check") : ""}</article>`;
   }).join("");
   $("#resident-entries").replaceChildren(
     ...world.residents.map((resident) => {
       const row = document.createElement("li"),
         button = document.createElement("button");
+
       button.className = "resident-note";
       button.innerHTML = `<span class="resident-mark" aria-hidden="true">${icon("leaf")}</span><span><strong>${residentName(resident)}</strong><span>${residentObservation(world, resident)}</span><small>Visit home patch ${resident.cell + 1} <span aria-hidden="true">↗</span></small></span>`;
       button.addEventListener("click", () => {
@@ -294,23 +336,28 @@ function openGuide() {
         openPatch(resident.cell);
       });
       row.append(button);
+
       return row;
     }),
   );
   $("#guide-dialog").showModal();
 }
+
 document
   .querySelectorAll(".guide-button")
   .forEach((b) => b.addEventListener("click", openGuide));
+
 document
   .querySelectorAll(".dialog-close")
   .forEach((b) =>
     b.addEventListener("click", () => b.closest("dialog").close()),
   );
+
 document.querySelectorAll("dialog").forEach((d) =>
   d.addEventListener("click", (e) => {
     if (e.target === d) {
       const r = d.getBoundingClientRect();
+
       if (
         e.clientX < r.left ||
         e.clientX > r.right ||
@@ -321,15 +368,18 @@ document.querySelectorAll("dialog").forEach((d) =>
     }
   }),
 );
+
 $("#seed-open").addEventListener("click", () => {
   $("#seed-input").value = world.seed;
   $("#seed-dialog").showModal();
 });
+
 document.querySelectorAll("[data-seed]").forEach((b) =>
   b.addEventListener("click", () => {
     $("#seed-input").value = b.dataset.seed;
   }),
 );
+
 $("#seed-form").addEventListener("submit", (e) => {
   e.preventDefault();
   pushHistory();
@@ -340,6 +390,7 @@ $("#seed-form").addEventListener("submit", (e) => {
   $("#seed-dialog").close();
   notify(`Hello, ${world.seed}. A new little island is ready.`);
 });
+
 $("#save-retry").addEventListener("click", () => {
   persist();
   notify(
@@ -348,22 +399,28 @@ $("#save-retry").addEventListener("click", () => {
       : "Saving is still unavailable. Export keeps a portable copy.",
   );
 });
+
 $("#export").addEventListener("click", () => {
   const blob = new Blob([serializeSave(world, history)], {
       type: "application/json",
     }),
     url = URL.createObjectURL(blob),
     a = document.createElement("a");
+
   a.href = url;
   a.download = `spoonworld-${world.seed.replace(/[^a-z0-9-]/gi, "-")}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   notify("World exported, field notes and undo history included.");
 });
+
 $("#import").addEventListener("click", () => $("#import-file").click());
+
 $("#import-file").addEventListener("change", async (e) => {
   const file = e.target.files[0];
+
   if (!file) return;
+
   try {
     if (file.size > 400000) throw new Error("This world file is too large.");
     const imported = parseSave(await file.text());
@@ -380,6 +437,7 @@ $("#import-file").addEventListener("change", async (e) => {
     e.target.value = "";
   }
 });
+
 window.addEventListener("keydown", (e) => {
   if (
     e.target instanceof HTMLInputElement ||
@@ -390,20 +448,26 @@ window.addEventListener("keydown", (e) => {
     e.altKey
   )
     return;
+
   if (/^[1-7]$/.test(e.key))
     selectIngredient(INGREDIENTS[Number(e.key) - 1].id);
+
   if (e.code === "Space" && !["BUTTON", "SUMMARY"].includes(e.target.tagName)) {
     e.preventDefault();
     togglePause();
   }
+
   if (e.key.toLowerCase() === "z") undo();
+
   if (e.target.id === "world-view") {
     if (e.key === "Enter") {
       e.preventDefault();
       sprinkle();
     }
+
     if (e.key.startsWith("Arrow")) {
       e.preventDefault();
+
       const c = world.cells[target],
         direction = {
           ArrowLeft: [-1, 0],
@@ -411,9 +475,11 @@ window.addEventListener("keydown", (e) => {
           ArrowUp: [0, -1],
           ArrowDown: [0, 1],
         }[e.key];
+
       const next = world.cells.find(
         (n) => n.q === c.q + direction[0] && n.r === c.r + direction[1],
       );
+
       if (next) {
         setTarget(next.id);
         $("#announcement").textContent = $("#target-description").textContent;
@@ -421,35 +487,50 @@ window.addEventListener("keydown", (e) => {
     }
   }
 });
+
 let last = performance.now(),
   accumulator = 0;
+
 function clock(now) {
   const elapsed = Math.min(250, now - last);
   last = now;
+
   if (!paused && !document.hidden && !$("dialog[open]")) accumulator += elapsed;
+
   if (accumulator >= 1000) {
     accumulator -= 1000;
     world = stepWorld(world);
     updateUI();
+
     if (world.tick % 5 === 0) persist();
   }
+
   requestAnimationFrame(clock);
 }
+
 document.addEventListener("visibilitychange", () => {
   last = performance.now();
   accumulator = 0;
   renderer.pause(document.hidden);
+
   if (document.hidden) persist();
 });
+
 window.addEventListener("pagehide", persist);
+
 selectIngredient(ingredient);
+
 updateUI();
+
 persist();
+
 requestAnimationFrame(clock);
+
 if (saved.status === "invalid")
   notify(
     "The previous save could not be read. A fresh bowl is ready; you can import a backup.",
   );
+
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   navigator.serviceWorker
     .register("/sw.js")
@@ -461,6 +542,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
       $("#offline-status").textContent = "Offline cache unavailable";
     });
 }
+
 // Read-only diagnostics for tests and resource inspection. No external calls.
 window.spoonworld = Object.freeze({
   snapshot: () => structuredClone(world),
