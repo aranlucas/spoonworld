@@ -5,31 +5,38 @@ export const project = (cell) => ({
   x: 480 + (cell.q + cell.r / 2) * 48,
   y: 332 + cell.r * 27 - (cell.land ? 25 : 0),
 });
+
 const ellipse = (ctx, x, y, rx, ry, fill, stroke) => {
   ctx.beginPath();
   ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+
   if (fill) {
     ctx.fillStyle = fill;
     ctx.fill();
   }
+
   if (stroke) {
     ctx.strokeStyle = stroke;
     ctx.stroke();
   }
 };
+
 function path(ctx, points, fill, stroke) {
   ctx.beginPath();
   points.forEach((p, i) => (i ? ctx.lineTo(...p) : ctx.moveTo(...p)));
   ctx.closePath();
+
   if (fill) {
     ctx.fillStyle = fill;
     ctx.fill();
   }
+
   if (stroke) {
     ctx.strokeStyle = stroke;
     ctx.stroke();
   }
 }
+
 function line(ctx, points, color, width = 2) {
   ctx.beginPath();
   points.forEach((p, i) => (i ? ctx.lineTo(...p) : ctx.moveTo(...p)));
@@ -37,6 +44,7 @@ function line(ctx, points, color, width = 2) {
   ctx.lineWidth = width;
   ctx.stroke();
 }
+
 function tree(ctx, x, y, scale, variant) {
   ctx.save();
   ctx.translate(x, y);
@@ -66,9 +74,11 @@ function tree(ctx, x, y, scale, variant) {
   );
   ctx.restore();
 }
+
 function sprout(ctx, x, y, id, time, mode) {
   ctx.save();
   ctx.translate(x, y);
+
   if (mode === "flying") {
     ellipse(ctx, 0, -23, 15, 22, "#edf8e333", "#bedbd3");
     ellipse(ctx, -5, -29, 3, 7, "#fff8");
@@ -84,6 +94,7 @@ function sprout(ctx, x, y, id, time, mode) {
       1,
     );
   }
+
   if (mode === "sailing") {
     path(
       ctx,
@@ -115,6 +126,7 @@ function sprout(ctx, x, y, id, time, mode) {
       "#f9e9c6",
     );
   }
+
   ellipse(ctx, 0, 12, 11, 4, "#304c4424");
   const bounce = Math.sin(time * 2 + id) * 1.5;
   ellipse(
@@ -166,6 +178,7 @@ function sprout(ctx, x, y, id, time, mode) {
   ellipse(ctx, 4, -18 + bounce, 5, 2.8, "#90aa5e");
   ctx.restore();
 }
+
 function cloud(ctx, x, y, scale, alpha) {
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -189,20 +202,25 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
     phase = 0,
     frames = 0,
     reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const particles = [];
+
   class BowlScene extends Phaser.Scene {
     create() {
       this.game.canvas.setAttribute("aria-hidden", "true");
       this.texture = this.textures.createCanvas("bowl", 960, 640);
       this.image = this.add.image(0, 0, "bowl").setOrigin(0);
       const canvas = this.game.canvas;
+
       const position = (event) => {
         const box = canvas.getBoundingClientRect();
+
         return {
           x: ((event.clientX - box.left) * 960) / box.width,
           y: ((event.clientY - box.top) * 640) / box.height,
         };
       };
+
       let start = null;
       canvas.addEventListener("pointermove", (event) => {
         const p = position(event);
@@ -212,6 +230,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
             d: Math.hypot(project(c).x - p.x, (project(c).y - p.y) * 1.4),
           }))
           .sort((a, b) => a.d - b.d)[0];
+
         if (hovered.d > 47) hovered = null;
       });
       canvas.addEventListener("pointerleave", () => {
@@ -226,13 +245,17 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
       });
       canvas.addEventListener("pointerup", (event) => {
         if (!start || start.id !== event.pointerId) return;
+
         const moved = Math.hypot(
           start.x - event.clientX,
           start.y - event.clientY,
         );
+
         start = null;
+
         if (moved > 12) return;
         const pointer = position(event);
+
         const closest = getWorld()
           .cells.map((c) => ({
             c,
@@ -242,6 +265,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
             ),
           }))
           .sort((a, b) => a.d - b.d)[0];
+
         if (closest.d < 47) {
           selected = closest.c.id;
           onTarget(selected);
@@ -253,19 +277,23 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
       frames = (frames + 1) % 1000000000;
       phase += reduced ? 0 : Math.min(delta, 80) / 1000;
       draw(this.texture.context, getWorld(), phase);
+
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.life -= Math.min(delta, 80) / 1000;
+
         if (p.life <= 0) {
           particles.splice(i, 1);
           continue;
         }
+
         p.y += (p.vy * delta) / 1000;
         p.x += (p.vx * delta) / 1000;
         ellipse(this.texture.context, p.x, p.y, p.size, p.size * 0.8, p.color);
       }
     }
   }
+
   const game = new Phaser.Game({
     type: Phaser.CANVAS,
     parent,
@@ -288,6 +316,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
     // Pencil-like environmental marks keep the world a small, hand-made object.
     ctx.strokeStyle = "#d8d2bf";
     ctx.lineWidth = 1;
+
     for (const [x, y] of [
       [164, 195],
       [791, 235],
@@ -313,6 +342,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
         1,
       );
     }
+
     ellipse(ctx, 480, 547, 252, 35, "#d9cbb741");
     ellipse(ctx, 480, 544, 194, 18, "#c5bda633");
     // Ceramic body, painted first so the water and habitat sit inside the rim.
@@ -338,10 +368,13 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
     ctx.beginPath();
     ctx.ellipse(480, 364, 281, 167, 0, 0.19, Math.PI - 0.19);
     ctx.stroke();
+
     for (let i = 0; i < 17; i++) {
       const a = 0.3 + (i * (Math.PI - 0.6)) / 16;
+
       const x = 480 + 266 * Math.cos(a),
         y = 364 + 164 * Math.sin(a);
+
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(a - Math.PI / 2);
@@ -358,6 +391,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
       );
       ctx.restore();
     }
+
     ctx.restore();
     ellipse(ctx, 480, 326, 294, 169, "#f3e5cc", "#af9779");
     const sea = ctx.createLinearGradient(0, 220, 0, 490);
@@ -368,9 +402,11 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
     ctx.beginPath();
     ctx.ellipse(480, 326, 271, 148, 0, 0, Math.PI * 2);
     ctx.clip();
+
     for (let i = 0; i < 16; i++) {
       const x = 245 + ((i * 89) % 470) + Math.sin(t * 0.4 + i) * 6,
         y = 230 + ((i * 41) % 200);
+
       ctx.beginPath();
       ctx.moveTo(x - 10, y);
       ctx.quadraticCurveTo(x, y + 3, x + 10, y);
@@ -378,11 +414,14 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
       ctx.lineWidth = 1.7;
       ctx.stroke();
     }
+
     if (w.salinity >= 30)
       for (let i = 0; i < 12; i++) {
         const a = (i * Math.PI) / 6;
+
         const x = 480 + 225 * Math.cos(a),
           y = 326 + 115 * Math.sin(a);
+
         line(
           ctx,
           [
@@ -394,10 +433,13 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
           2,
         );
       }
+
     ctx.restore();
+
     const cells = [...w.cells].sort(
       (a, b) => project(a).y - project(b).y || a.q - b.q,
     );
+
     for (const c of cells.filter((c) => c.land)) {
       const { x, y } = project(c),
         points = [
@@ -408,7 +450,9 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
           [x, y + 25],
           [x - 24, y + 14],
         ];
+
       const shore = w.cells.some((n) => !n.land && hexDistance(n, c) <= 1);
+
       if (shore) {
         path(
           ctx,
@@ -416,20 +460,24 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
           "#a3945e",
         );
       }
+
       const color =
         c.salt >= 65
           ? "#cab780"
           : c.moisture < 25
             ? "#bdb47d"
             : ["#a9bc78", "#b4c681", "#a6bc76", "#b8c78a"][c.variant];
+
       path(ctx, points, color);
       ctx.strokeStyle = "#afc08244";
       ctx.lineWidth = 1;
       ctx.stroke();
+
       // Tiny strokes make ground readable without a grid overlay.
       for (let j = 0; j < 3; j++) {
         const xx = x - 13 + j * 11,
           yy = y + 6 + (j % 2) * 5;
+
         line(
           ctx,
           [
@@ -441,14 +489,19 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
           1,
         );
       }
+
       if (c.sugar > 18) {
         ellipse(ctx, x + 12, y + 3, 2, 2, "#dfc363");
         ellipse(ctx, x - 9, y - 7, 1.8, 1.8, "#f4db94");
       }
+
       if (c.acid > 12) ellipse(ctx, x + 8, y + 9, 4, 2, "#d5be4a");
+
       if (c.soda > 12) ellipse(ctx, x - 8, y + 10, 4, 2, "#e8e4d5");
     }
+
     const chosen = w.cells[hovered?.c.id ?? selected];
+
     if (chosen) {
       const { x, y } = project(chosen);
       ctx.save();
@@ -457,10 +510,13 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
       ellipse(ctx, x, y, 25, 16, null, "#fdf3dc");
       ctx.restore();
     }
+
     // Trees and residents are sorted together for predictable depth.
     const objects = [];
+
     for (const c of cells.filter((c) => c.land)) {
       const p = project(c);
+
       if (c.herbs > 40)
         objects.push({
           y: p.y,
@@ -490,10 +546,12 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
             ellipse(ctx, p.x + 4, p.y - 11, 5, 3, "#83a34f");
           },
         });
+
       if (c.flowers > 3)
         for (let j = 0; j < Math.min(4, Math.ceil(c.flowers / 12)); j++) {
           const x = p.x - 14 + j * 8,
             y = p.y + 11;
+
           line(
             ctx,
             [
@@ -514,14 +572,17 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
           );
         }
     }
+
     w.residents.forEach((r) => {
       const p = project(w.cells[r.cell]);
       const mode = residentMode(w, r);
       const a = r.id * 0.5236 + t * 0.06;
+
       const x =
         mode === "sailing"
           ? 480 + 220 * Math.cos(a)
           : p.x + Math.sin(t * 0.8 + r.id) * 8;
+
       const y =
         mode === "sailing"
           ? 326 + 109 * Math.sin(a)
@@ -530,6 +591,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
             (mode === "flying"
               ? -63 - Math.sin(t + r.id) * 14
               : Math.cos(t * 0.5 + r.id) * 3);
+
       objects.push({
         y: y + (mode === "flying" ? 100 : 0),
         draw: () => sprout(ctx, x, y, r.id, t, mode),
@@ -541,11 +603,14 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
     ellipse(ctx, 671, 146, 18, 18, "#efd49b");
     cloud(ctx, 310 + Math.sin(t * 0.1) * 11, 137, 0.8, 0.9);
     cloud(ctx, 661 + Math.sin(t * 0.08) * 13, 207, 0.65, 0.95);
+
     if (w.heat > 40) cloud(ctx, 456 + Math.sin(t * 0.15) * 20, 111, 1.05, 0.88);
+
     if (w.heat >= 42 && w.humidity >= 58) {
       for (let i = 0; i < 26; i++) {
         const x = 280 + ((i * 73) % 390),
           y = 181 + ((i * 49 + t * 55) % 215);
+
         line(
           ctx,
           [
@@ -557,21 +622,26 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
         );
       }
     }
+
     if (w.fizz > 10)
       for (let i = 0; i < 8; i++) {
         const x = 340 + ((i * 57) % 280),
           y = 230 - ((t * 19 + i * 24) % 90);
+
         ellipse(ctx, x, y, 4 + (i % 4), 6 + (i % 5), "#f2ffec20", "#edf9db77");
       }
+
     ctx.fillStyle = "#6a7356";
     ctx.font = "italic 17px Georgia";
     ctx.textAlign = "center";
     ctx.fillText("a little world, made from little things", 480, 597);
   }
+
   return {
     sprinkle(cellId, color) {
       if (reduced) return;
       const p = project(getWorld().cells[cellId]);
+
       for (let i = 0; i < 16; i++)
         particles.push({
           x: p.x + ((i % 4) - 2) * 4,
@@ -582,13 +652,15 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
           color,
           life: 0.65,
         });
+
       if (particles.length > 48) particles.splice(0, particles.length - 48);
     },
     setTarget(id) {
       selected = id;
     },
     pause(value) {
-      value ? game.loop.sleep() : game.loop.wake();
+      if (value) game.loop.sleep();
+      else game.loop.wake();
     },
     debug() {
       return {

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { createWorld } from "../src/simulation.js";
-import { serializeSave, parseSave } from "../src/storage.js";
+import { parseSave } from "../src/storage.js";
 import AxeBuilder from "@axe-core/playwright";
 import { writeFile } from "node:fs/promises";
 
@@ -9,10 +9,12 @@ const pause = async (page) => {
   await page.locator("#pause").click();
   await expect(page.locator("#pause")).toHaveAttribute("aria-pressed", "true");
 };
+
 const add = async (page, id) => {
   await page.locator(`[data-ingredient="${id}"]`).click();
   await page.locator("#sprinkle").click();
 };
+
 const snapshot = (page) => page.evaluate(() => window.spoonworld.snapshot());
 
 test("desktop boots without errors or third-party requests; screenshot", async ({
@@ -20,6 +22,7 @@ test("desktop boots without errors or third-party requests; screenshot", async (
 }) => {
   const errors = [],
     external = [];
+
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("request", (r) => {
     if (
@@ -55,11 +58,13 @@ test("desktop boots without errors or third-party requests; screenshot", async (
     ),
   ).toBe(true);
 });
+
 test("all five goals work through the UI; illustrated guide screenshot", async ({
   page,
 }) => {
   await page.goto("/");
   await pause(page);
+
   for (const id of [
     "herbs",
     "salt",
@@ -87,6 +92,7 @@ test("all five goals work through the UI; illustrated guide screenshot", async (
   await page.keyboard.press("Escape");
   await expect(page.locator("#guide-dialog")).not.toBeVisible();
 });
+
 test("undo restores exact state, reset is seeded, and reset can be undone", async ({
   page,
 }) => {
@@ -106,6 +112,7 @@ test("undo restores exact state, reset is seeded, and reset can be undone", asyn
   await page.locator("#undo").click();
   expect(await snapshot(page)).toEqual(fizz);
 });
+
 test("world and undo history persist across reload", async ({ page }) => {
   await page.goto("/");
   await pause(page);
@@ -119,6 +126,7 @@ test("world and undo history persist across reload", async ({ page }) => {
   await page.locator("#undo").click();
   expect((await snapshot(page)).doses).toBe(1);
 });
+
 test("seed changes produce different terrain and are reversible", async ({
   page,
 }) => {
@@ -132,14 +140,17 @@ test("seed changes produce different terrain and are reversible", async ({
   await page.locator("#undo").click();
   expect(await snapshot(page)).toEqual(before);
 });
+
 test("export/import preserves world; invalid file leaves bowl untouched", async ({
   page,
 }) => {
   await page.goto("/");
   await pause(page);
   await add(page, "herbs");
+
   const before = await snapshot(page),
     downloadPromise = page.waitForEvent("download");
+
   await page.locator("#export").click();
   const download = await downloadPromise;
   const exported = await readFile(await download.path(), "utf8");
@@ -160,6 +171,7 @@ test("export/import preserves world; invalid file leaves bowl untouched", async 
   await expect(page.locator("#toast")).toContainText("not a valid");
   expect(await snapshot(page)).toEqual(before);
 });
+
 test("corrupt saved data recovers to a usable new bowl", async ({ page }) => {
   await page.addInitScript(() =>
     localStorage.setItem("spoonworld.save.v1", "{broken"),
@@ -170,6 +182,7 @@ test("corrupt saved data recovers to a usable new bowl", async ({ page }) => {
   await add(page, "herbs");
   expect((await snapshot(page)).discovered).toContain("grove");
 });
+
 test("storage quota failure offers export and retry, retry recovers", async ({
   page,
 }) => {
@@ -178,6 +191,7 @@ test("storage quota failure offers export and retry, retry recovers", async ({
     Storage.prototype.setItem = function () {
       throw new DOMException("Quota exceeded", "QuotaExceededError");
     };
+
     window.restoreStorage = () => {
       Storage.prototype.setItem = original;
     };
@@ -194,6 +208,7 @@ test("storage quota failure offers export and retry, retry recovers", async ({
     "Saved on this device",
   );
 });
+
 test("production works after an offline reload, including ingredients and persistence", async ({
   page,
   context,
@@ -215,6 +230,7 @@ test("production works after an offline reload, including ingredients and persis
   await page.screenshot({ path: "evidence/offline.png", fullPage: true });
   await context.setOffline(false);
 });
+
 test.describe("touch device", () => {
   test.use({
     hasTouch: true,
@@ -248,6 +264,7 @@ test.describe("touch device", () => {
     ).toBe(true);
   });
 });
+
 test("keyboard and reduced motion work; resources remain bounded", async ({
   page,
 }) => {
@@ -263,6 +280,7 @@ test("keyboard and reduced motion work; resources remain bounded", async ({
     ingredient: "lemon",
     target: 29,
   });
+
   for (let i = 0; i < 25; i++) await page.locator("#sprinkle").click();
   const debug = await page.evaluate(() => window.spoonworld.debug());
   expect(debug.history).toBe(12);
@@ -273,6 +291,7 @@ test("keyboard and reduced motion work; resources remain bounded", async ({
   await page.keyboard.press("z");
   expect((await snapshot(page)).doses).toBe(25);
 });
+
 test("desktop, guide, and mobile have no serious accessibility violations", async ({
   page,
 }) => {
@@ -330,14 +349,17 @@ test("desktop, guide, and mobile have no serious accessibility violations", asyn
       2,
     ),
   );
+
   for (const report of reports)
     expect(report.violations, report.surface).toEqual([]);
 });
+
 test("small phone and tablet layouts preserve usable controls", async ({
   page,
 }) => {
   await page.goto("/");
   await pause(page);
+
   for (const width of [320, 768, 1024]) {
     await page.setViewportSize({ width, height: 900 });
     expect(
@@ -348,8 +370,10 @@ test("small phone and tablet layouts preserve usable controls", async ({
     await page.locator("#sprinkle").click();
     await expect(page.locator("#sprinkle")).toBeVisible();
   }
+
   expect((await snapshot(page)).doses).toBe(3);
 });
+
 test("patch notebook allows precise text-only play, explains stress, and restores exact state", async ({
   page,
 }) => {
@@ -391,6 +415,7 @@ test("patch notebook allows precise text-only play, explains stress, and restore
     "true",
   );
 });
+
 test("notebook undo rebuilds patch labels when it restores a different seed", async ({
   page,
 }) => {
@@ -410,6 +435,7 @@ test("notebook undo rebuilds patch labels when it restores a different seed", as
     ),
   );
 });
+
 test("named sproutling notes match immediate ferry mode and link to a home patch on mobile", async ({
   page,
 }) => {
@@ -455,6 +481,7 @@ test("named sproutling notes match immediate ferry mode and link to a home patch
     fullPage: true,
   });
 });
+
 test("runtime clock advances and the renderer respects its bounded frame budget", async ({
   page,
 }) => {
@@ -462,17 +489,22 @@ test("runtime clock advances and the renderer respects its bounded frame budget"
   await expect(page.locator("canvas")).toBeVisible();
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Performance.enable");
+
   const first = await page.evaluate(() => ({
     world: window.spoonworld.snapshot(),
     debug: window.spoonworld.debug(),
   }));
+
   const start = Date.now();
   await page.waitForTimeout(3000);
+
   const last = await page.evaluate(() => ({
     world: window.spoonworld.snapshot(),
     debug: window.spoonworld.debug(),
   }));
+
   const metrics = await cdp.send("Performance.getMetrics");
+
   const report = {
     browser: page.context().browser().version(),
     elapsedMs: Date.now() - start,
@@ -485,6 +517,7 @@ test("runtime clock advances and the renderer respects its bounded frame budget"
       ),
     ),
   };
+
   await writeFile(
     "evidence/runtime-budget.json",
     JSON.stringify(report, null, 2),

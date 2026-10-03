@@ -23,5 +23,6 @@ export function icon(type, className = "") {
     check: '<path d="m4 12 5 5L21 5"/>',
     close: '<path d="m5 5 14 14M19 5 5 19"/>',
   };
+
   return `<svg class="icon ${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[type] || paths.leaf}</svg>`;
 }
