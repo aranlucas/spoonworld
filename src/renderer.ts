@@ -1,12 +1,60 @@
 import Phaser from "phaser";
-import { hexDistance, residentMode } from "./simulation.js";
+import {
+  hexDistance,
+  residentMode,
+  type Cell,
+  type ResidentMode,
+  type World,
+} from "./simulation.ts";
 
-export const project = (cell) => ({
+type Ctx = CanvasRenderingContext2D;
+
+type Point = [number, number];
+
+type Paint = string | CanvasGradient | null;
+
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: string;
+  life: number;
+}
+
+interface Hover {
+  c: Cell;
+  d: number;
+}
+
+export interface WorldRenderer {
+  sprinkle(cellId: number, color: string): void;
+  setTarget(id: number): void;
+  pause(value: boolean): void;
+  debug(): { particles: number; canvas: number; fps: number; frames: number };
+  destroy(): void;
+}
+
+export interface WorldCallbacks {
+  getWorld: () => World;
+  onTap: (cellId: number) => void;
+}
+
+export const project = (cell: Cell) => ({
   x: 480 + (cell.q + cell.r / 2) * 48,
   y: 332 + cell.r * 27 - (cell.land ? 25 : 0),
 });
 
-const ellipse = (ctx, x, y, rx, ry, fill, stroke) => {
+const ellipse = (
+  ctx: Ctx,
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+  fill: Paint,
+  stroke?: string,
+) => {
   ctx.beginPath();
   ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
 
@@ -21,7 +69,7 @@ const ellipse = (ctx, x, y, rx, ry, fill, stroke) => {
   }
 };
 
-function path(ctx, points, fill, stroke) {
+function path(ctx: Ctx, points: Point[], fill: Paint, stroke?: string) {
   ctx.beginPath();
   points.forEach((p, i) => (i ? ctx.lineTo(...p) : ctx.moveTo(...p)));
   ctx.closePath();
@@ -37,7 +85,7 @@ function path(ctx, points, fill, stroke) {
   }
 }
 
-function line(ctx, points, color, width = 2) {
+function line(ctx: Ctx, points: Point[], color: string, width = 2) {
   ctx.beginPath();
   points.forEach((p, i) => (i ? ctx.lineTo(...p) : ctx.moveTo(...p)));
   ctx.strokeStyle = color;
@@ -45,7 +93,7 @@ function line(ctx, points, color, width = 2) {
   ctx.stroke();
 }
 
-function tree(ctx, x, y, scale, variant) {
+function tree(ctx: Ctx, x: number, y: number, scale: number, variant: number) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
@@ -75,7 +123,7 @@ function tree(ctx, x, y, scale, variant) {
   ctx.restore();
 }
 
-function sprout(ctx, x, y, id, time, mode) {
+function sprout(ctx: Ctx, x: number, y: number, id: number, time: number, mode: ResidentMode) {
   ctx.save();
   ctx.translate(x, y);
 
@@ -179,7 +227,7 @@ function sprout(ctx, x, y, id, time, mode) {
   ctx.restore();
 }
 
-function cloud(ctx, x, y, scale, alpha) {
+function cloud(ctx: Ctx, x: number, y: number, scale: number, alpha: number) {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(x, y);
@@ -196,23 +244,27 @@ function cloud(ctx, x, y, scale, alpha) {
   ctx.restore();
 }
 
-export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
+export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): WorldRenderer {
+  const { getWorld, onTap } = callbacks;
+
   let selected = 30,
-    hovered = null,
+    hovered: Hover | null = null,
     phase = 0,
     frames = 0,
     reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const particles = [];
+  const particles: Particle[] = [];
 
   class BowlScene extends Phaser.Scene {
+    bowl: Phaser.Textures.CanvasTexture | null = null;
+
     create() {
       this.game.canvas.setAttribute("aria-hidden", "true");
-      this.texture = this.textures.createCanvas("bowl", 960, 640);
-      this.image = this.add.image(0, 0, "bowl").setOrigin(0);
+      this.bowl = this.textures.createCanvas("bowl", 960, 640);
+      this.add.image(0, 0, "bowl").setOrigin(0);
       const canvas = this.game.canvas;
 
-      const position = (event) => {
+      const position = (event: PointerEvent) => {
         const box = canvas.getBoundingClientRect();
 
         return {
@@ -221,7 +273,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
         };
       };
 
-      let start = null;
+      let start: { id: number; x: number; y: number } | null = null;
       canvas.addEventListener("pointermove", (event) => {
         const p = position(event);
         hovered = getWorld()
@@ -231,7 +283,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
           }))
           .sort((a, b) => a.d - b.d)[0];
 
-        if (hovered.d > 47) hovered = null;
+        if (hovered && hovered.d > 47) hovered = null;
       });
       canvas.addEventListener("pointerleave", () => {
         hovered = null;
@@ -246,10 +298,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
       canvas.addEventListener("pointerup", (event) => {
         if (!start || start.id !== event.pointerId) return;
 
-        const moved = Math.hypot(
-          start.x - event.clientX,
-          start.y - event.clientY,
-        );
+        const moved = Math.hypot(start.x - event.clientX, start.y - event.clientY);
 
         start = null;
 
@@ -259,24 +308,23 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
         const closest = getWorld()
           .cells.map((c) => ({
             c,
-            d: Math.hypot(
-              project(c).x - pointer.x,
-              (project(c).y - pointer.y) * 1.4,
-            ),
+            d: Math.hypot(project(c).x - pointer.x, (project(c).y - pointer.y) * 1.4),
           }))
           .sort((a, b) => a.d - b.d)[0];
 
-        if (closest.d < 47) {
+        if (closest && closest.d < 47) {
           selected = closest.c.id;
-          onTarget(selected);
-          onSprinkle(selected);
+          onTap(selected);
         }
       });
     }
-    update(_time, delta) {
+    update(_time: number, delta: number) {
+      const context = this.bowl?.context;
+
+      if (!context) return;
       frames = (frames + 1) % 1000000000;
       phase += reduced ? 0 : Math.min(delta, 80) / 1000;
-      draw(this.texture.context, getWorld(), phase);
+      draw(context, getWorld(), phase);
 
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
@@ -289,7 +337,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
 
         p.y += (p.vy * delta) / 1000;
         p.x += (p.vx * delta) / 1000;
-        ellipse(this.texture.context, p.x, p.y, p.size, p.size * 0.8, p.color);
+        ellipse(context, p.x, p.y, p.size, p.size * 0.8, p.color);
       }
     }
   }
@@ -308,7 +356,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
     input: { mouse: false, touch: false },
   });
 
-  function draw(ctx, w, t) {
+  function draw(ctx: Ctx, w: World, t: number) {
     ctx.clearRect(0, 0, 960, 640);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -436,13 +484,11 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
 
     ctx.restore();
 
-    const cells = [...w.cells].sort(
-      (a, b) => project(a).y - project(b).y || a.q - b.q,
-    );
+    const cells = [...w.cells].sort((a, b) => project(a).y - project(b).y || a.q - b.q);
 
     for (const c of cells.filter((c) => c.land)) {
       const { x, y } = project(c),
-        points = [
+        points: Point[] = [
           [x - 24, y - 14],
           [x, y - 25],
           [x + 24, y - 14],
@@ -456,7 +502,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
       if (shore) {
         path(
           ctx,
-          points.map(([px, py]) => [px, py + 14]),
+          points.map(([px, py]): Point => [px, py + 14]),
           "#a3945e",
         );
       }
@@ -512,7 +558,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
     }
 
     // Trees and residents are sorted together for predictable depth.
-    const objects = [];
+    const objects: { y: number; draw: () => void }[] = [];
 
     for (const c of cells.filter((c) => c.land)) {
       const p = project(c);
@@ -521,13 +567,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
         objects.push({
           y: p.y,
           draw: () =>
-            tree(
-              ctx,
-              p.x + (c.variant - 1) * 4,
-              p.y,
-              Math.min(1.3, c.herbs / 60),
-              c.variant,
-            ),
+            tree(ctx, p.x + (c.variant - 1) * 4, p.y, Math.min(1.3, c.herbs / 60), c.variant),
         });
       else if (c.herbs > 25)
         objects.push({
@@ -562,14 +602,7 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
             1,
           );
           ellipse(ctx, x, y - 8, 3, 3, j % 2 ? "#ecb680" : "#f4deac");
-          ellipse(
-            ctx,
-            x + Math.sin(t + j) * 7,
-            y - 19 - Math.cos(t + j) * 3,
-            2,
-            2,
-            "#ffe2a5",
-          );
+          ellipse(ctx, x + Math.sin(t + j) * 7, y - 19 - Math.cos(t + j) * 3, 2, 2, "#ffe2a5");
         }
     }
 
@@ -578,19 +611,14 @@ export function mountWorld(parent, { getWorld, onSprinkle, onTarget }) {
       const mode = residentMode(w, r);
       const a = r.id * 0.5236 + t * 0.06;
 
-      const x =
-        mode === "sailing"
-          ? 480 + 220 * Math.cos(a)
-          : p.x + Math.sin(t * 0.8 + r.id) * 8;
+      const x = mode === "sailing" ? 480 + 220 * Math.cos(a) : p.x + Math.sin(t * 0.8 + r.id) * 8;
 
       const y =
         mode === "sailing"
           ? 326 + 109 * Math.sin(a)
           : p.y +
             10 +
-            (mode === "flying"
-              ? -63 - Math.sin(t + r.id) * 14
-              : Math.cos(t * 0.5 + r.id) * 3);
+            (mode === "flying" ? -63 - Math.sin(t + r.id) * 14 : Math.cos(t * 0.5 + r.id) * 3);
 
       objects.push({
         y: y + (mode === "flying" ? 100 : 0),

@@ -1,9 +1,124 @@
 // Pure, serializable world rules. No DOM, time, renderer, or random global state.
-export const WORLD_VERSION = 1;
+import { z } from "zod";
+
+export const WORLD_VERSION = 1 as const;
 
 export const MAX_HISTORY = 12;
 
-export const INGREDIENTS = [
+export type IngredientId = "herbs" | "water" | "salt" | "chili" | "sugar" | "lemon" | "soda";
+
+export type Glyph = "leaf" | "drop" | "salt" | "chili" | "cube" | "lemon" | "jar";
+
+const GuideIdSchema = z.enum(["grove", "sailors", "rain", "glow", "ferry"]);
+
+const ResidentModeSchema = z.enum(["flying", "sailing", "nesting", "wandering"]);
+
+const level = z.number().min(0).max(100);
+
+const CellSchema = z.object({
+  id: z.int(),
+  q: z.int(),
+  r: z.int(),
+  land: z.boolean(),
+  variant: z.int(),
+  herbs: level,
+  moisture: level,
+  salt: level,
+  sugar: level,
+  acid: level,
+  soda: level,
+  flowers: level,
+});
+
+const ResidentSchema = z.object({
+  id: z.int(),
+  cell: z.int(),
+  mood: ResidentModeSchema,
+});
+
+const WorldEventSchema = z.object({
+  tick: z.int().min(0),
+  text: z.string().max(180),
+});
+
+const WorldFieldsSchema = z.object({
+  version: z.literal(WORLD_VERSION),
+  seed: z.string().max(40),
+  tick: z.int().min(0).max(999999999),
+  heat: level,
+  humidity: level,
+  salinity: level,
+  fizz: level,
+  cells: z.array(CellSchema).length(61),
+  residents: z.array(ResidentSchema).length(12),
+  discovered: z
+    .array(GuideIdSchema)
+    .refine((ids) => new Set(ids).size === ids.length, "Duplicate notes."),
+  doses: z.int().min(0).max(1000000),
+  events: z.array(WorldEventSchema).max(6),
+});
+
+export type GuideId = z.infer<typeof GuideIdSchema>;
+
+export type ResidentMode = z.infer<typeof ResidentModeSchema>;
+
+export type Cell = z.infer<typeof CellSchema>;
+
+export type Resident = z.infer<typeof ResidentSchema>;
+
+export type WorldEvent = z.infer<typeof WorldEventSchema>;
+
+export type World = z.infer<typeof WorldFieldsSchema>;
+
+function matchesSeed(world: World): boolean {
+  const template = createWorld(world.seed).cells;
+
+  return (
+    world.cells.every(
+      (c, i) =>
+        c.id === i &&
+        c.q === template[i].q &&
+        c.r === template[i].r &&
+        c.land === template[i].land &&
+        c.variant === template[i].variant,
+    ) && world.residents.every((r, i) => r.id === i && world.cells[r.cell]?.land)
+  );
+}
+
+// Saves and imports are untrusted: every field is bounded, and the fixed
+// terrain must match the island its seed grows.
+export const WorldSchema = WorldFieldsSchema.refine(matchesSeed, "World does not match its seed.");
+
+export interface Ingredient {
+  id: IngredientId;
+  name: string;
+  note: string;
+  color: string;
+  glyph: Glyph;
+  effect: string;
+}
+
+export interface GuideEntry {
+  id: GuideId;
+  title: string;
+  hint: string;
+  recipe: string;
+  text: string;
+  glyph: Glyph;
+}
+
+export interface Weather {
+  name: string;
+  symbol: string;
+  text: string;
+}
+
+export interface HexPosition {
+  q: number;
+  r: number;
+}
+
+export const INGREDIENTS: readonly Ingredient[] = [
   {
     id: "herbs",
     name: "Herbs",
@@ -62,7 +177,7 @@ export const INGREDIENTS = [
   },
 ];
 
-export const GUIDE = [
+export const GUIDE: readonly GuideEntry[] = [
   {
     id: "grove",
     title: "The herb woods",
@@ -105,9 +220,9 @@ export const GUIDE = [
   },
 ];
 
-export const clamp = (n, min = 0, max = 100) => Math.max(min, Math.min(max, n));
+export const clamp = (n: number, min = 0, max = 100): number => Math.max(min, Math.min(max, n));
 
-export function hashSeed(seed) {
+export function hashSeed(seed: string): number {
   let hash = 2166136261;
 
   for (const c of seed) {
@@ -118,7 +233,7 @@ export function hashSeed(seed) {
   return hash >>> 0;
 }
 
-export function random(seed) {
+export function random(seed: number): () => number {
   let a = seed >>> 0;
 
   return () => {
@@ -131,10 +246,10 @@ export function random(seed) {
   };
 }
 
-export function createWorld(seed = "little-soup") {
-  seed = String(seed).trim().slice(0, 40) || "little-soup";
+export function createWorld(requestedSeed = "little-soup"): World {
+  const seed = requestedSeed.trim().slice(0, 40) || "little-soup";
   const rng = random(hashSeed(seed));
-  const cells = [];
+  const cells: Cell[] = [];
 
   for (let r = -4; r <= 4; r++)
     for (let q = -4; q <= 4; q++) {
@@ -159,7 +274,7 @@ export function createWorld(seed = "little-soup") {
 
   const land = cells.filter((c) => c.land);
 
-  const residents = Array.from({ length: 12 }, (_, id) => ({
+  const residents = Array.from({ length: 12 }, (_, id): Resident => ({
     id,
     cell: land[Math.floor(rng() * land.length)].id,
     mood: "wandering",
@@ -186,28 +301,20 @@ export function createWorld(seed = "little-soup") {
   };
 }
 
-export const hexDistance = (a, b) =>
-  Math.max(
-    Math.abs(a.q - b.q),
-    Math.abs(a.r - b.r),
-    Math.abs(a.q + a.r - b.q - b.r),
-  );
+export const hexDistance = (a: HexPosition, b: HexPosition): number =>
+  Math.max(Math.abs(a.q - b.q), Math.abs(a.r - b.r), Math.abs(a.q + a.r - b.q - b.r));
 
-function record(world, text) {
+function record(world: World, text: string) {
   world.events.unshift({ tick: world.tick, text });
   world.events = world.events.slice(0, 6);
 }
 
-function discover(world) {
-  const conditions = {
-    grove: world.cells.some(
-      (c) => c.land && c.herbs >= 45 && c.moisture >= 30 && c.salt < 65,
-    ),
+function discover(world: World) {
+  const conditions: Record<GuideId, boolean> = {
+    grove: world.cells.some((c) => c.land && c.herbs >= 45 && c.moisture >= 30 && c.salt < 65),
     sailors: world.salinity >= 30,
     rain: world.heat >= 42 && world.humidity >= 58,
-    glow: world.cells.some(
-      (c) => c.land && c.herbs >= 35 && c.sugar >= 20 && c.moisture > 25,
-    ),
+    glow: world.cells.some((c) => c.land && c.herbs >= 35 && c.sugar >= 20 && c.moisture > 25),
     ferry: world.fizz > 10,
   };
 
@@ -218,7 +325,7 @@ function discover(world) {
     }
 }
 
-export function addIngredient(previous, ingredient, cellId) {
+export function addIngredient(previous: World, ingredient: IngredientId, cellId: number): World {
   if (!INGREDIENTS.some((i) => i.id === ingredient) || !previous.cells[cellId])
     throw new Error("Choose a pantry ingredient and a world patch.");
   const world = structuredClone(previous);
@@ -267,7 +374,7 @@ export function addIngredient(previous, ingredient, cellId) {
     world.humidity = clamp(world.humidity + 2);
   }
 
-  const messages = {
+  const messages: Record<IngredientId, string> = {
     herbs: "Little roots reach into the soil.",
     water: "A cool splash. The roots drink; the brine softens.",
     salt: "The sea grows briny. Shell boats catch the tide.",
@@ -283,7 +390,7 @@ export function addIngredient(previous, ingredient, cellId) {
   return world;
 }
 
-export function weather(world) {
+export function weather(world: World): Weather {
   if (world.fizz > 10)
     return {
       name: "Bubble breeze",
@@ -319,7 +426,7 @@ export function weather(world) {
   };
 }
 
-export function residentMode(world, resident) {
+export function residentMode(world: World, resident: Resident): ResidentMode {
   return world.fizz > 10
     ? "flying"
     : world.salinity >= 30 && resident.id % 3 === 0
@@ -329,7 +436,7 @@ export function residentMode(world, resident) {
         : "wandering";
 }
 
-export function stepWorld(previous, steps = 1) {
+export function stepWorld(previous: World, steps = 1): World {
   if (!Number.isInteger(steps) || steps < 0 || steps > 10000)
     throw new Error("Invalid simulation step count.");
   const world = structuredClone(previous);
@@ -342,19 +449,13 @@ export function stepWorld(previous, steps = 1) {
     world.fizz = clamp(world.fizz - 0.4);
 
     for (const c of world.cells) {
-      c.moisture = clamp(
-        c.moisture +
-          (rain ? 0.55 : -0.08 - Math.max(0, world.heat - 40) * 0.012),
-      );
+      c.moisture = clamp(c.moisture + (rain ? 0.55 : -0.08 - Math.max(0, world.heat - 40) * 0.012));
 
       if (c.land && c.herbs > 3)
-        c.herbs = clamp(
-          c.herbs + (c.moisture > 25 && c.salt < 65 ? 0.13 : -0.18),
-        );
+        c.herbs = clamp(c.herbs + (c.moisture > 25 && c.salt < 65 ? 0.13 : -0.18));
       c.sugar = clamp(c.sugar - 0.025);
       c.flowers = clamp(
-        c.flowers +
-          (c.herbs > 35 && c.sugar > 15 && c.moisture > 25 ? 0.5 : -0.12),
+        c.flowers + (c.herbs > 35 && c.sugar > 15 && c.moisture > 25 ? 0.5 : -0.12),
       );
       c.acid = clamp(c.acid - 0.015);
       c.soda = clamp(c.soda - 0.015);
@@ -365,19 +466,13 @@ export function stepWorld(previous, steps = 1) {
       resident.mood = residentMode(world, resident);
 
       if (world.tick % 8 === resident.id % 8) {
-        const neighbours = world.cells.filter(
-          (c) => c.land && hexDistance(c, here) <= 1,
-        );
+        const neighbours = world.cells.filter((c) => c.land && hexDistance(c, here) <= 1);
 
         neighbours.sort(
-          (a, b) =>
-            b.herbs + b.moisture - b.salt - (a.herbs + a.moisture - a.salt) ||
-            a.id - b.id,
+          (a, b) => b.herbs + b.moisture - b.salt - (a.herbs + a.moisture - a.salt) || a.id - b.id,
         );
         resident.cell = neighbours.length
-          ? neighbours[
-              (world.tick + resident.id) % Math.min(neighbours.length, 3)
-            ].id
+          ? neighbours[(world.tick + resident.id) % Math.min(neighbours.length, 3)].id
           : resident.cell;
       }
     }
@@ -388,110 +483,12 @@ export function stepWorld(previous, steps = 1) {
   return world;
 }
 
-export function describeWorld(world) {
+export function describeWorld(world: World): string {
   const forests = world.cells.filter((c) => c.land && c.herbs >= 45).length;
   const blooms = world.cells.filter((c) => c.flowers > 5).length;
 
   return `${world.residents.length} sproutlings. ${forests} wooded patches. ${blooms} flowering patches. ${weather(world).name}. ${world.discovered.length} of ${GUIDE.length} field notes found.`;
 }
 
-// Reject malformed imports rather than partially trusting their shape.
-export function validateWorld(value) {
-  if (
-    !value ||
-    value.version !== WORLD_VERSION ||
-    // eslint-disable-next-line anti-slop/no-runtime-typeof -- Validate untrusted saved/imported data at this native-JavaScript boundary before domain use.
-    typeof value.seed !== "string" ||
-    value.seed.length > 40
-  )
-    return false;
-
-  if (
-    !Number.isInteger(value.tick) ||
-    value.tick < 0 ||
-    value.tick >= 1000000000
-  )
-    return false;
-
-  if (
-    !Number.isInteger(value.doses) ||
-    value.doses < 0 ||
-    value.doses > 1000000
-  )
-    return false;
-
-  if (
-    ["heat", "humidity", "salinity", "fizz"].some(
-      (k) => !Number.isFinite(value[k]) || value[k] < 0 || value[k] > 100,
-    )
-  )
-    return false;
-  const template = createWorld(value.seed);
-
-  if (
-    !Array.isArray(value.cells) ||
-    value.cells.length !== 61 ||
-    !Array.isArray(value.residents) ||
-    value.residents.length !== 12
-  )
-    return false;
-
-  for (let i = 0; i < value.cells.length; i++) {
-    const c = value.cells[i],
-      t = template.cells[i];
-
-    if (
-      !c ||
-      c.id !== i ||
-      c.q !== t.q ||
-      c.r !== t.r ||
-      c.land !== t.land ||
-      c.variant !== t.variant
-    )
-      return false;
-
-    if (
-      ["herbs", "moisture", "salt", "sugar", "acid", "soda", "flowers"].some(
-        (k) => !Number.isFinite(c[k]) || c[k] < 0 || c[k] > 100,
-      )
-    )
-      return false;
-  }
-
-  for (let i = 0; i < value.residents.length; i++) {
-    const r = value.residents[i];
-
-    if (
-      !r ||
-      r.id !== i ||
-      !Number.isInteger(r.cell) ||
-      !value.cells[r.cell]?.land ||
-      !["flying", "sailing", "nesting", "wandering"].includes(r.mood)
-    )
-      return false;
-  }
-
-  if (
-    !Array.isArray(value.discovered) ||
-    new Set(value.discovered).size !== value.discovered.length ||
-    value.discovered.some((id) => !GUIDE.some((g) => g.id === id))
-  )
-    return false;
-
-  if (
-    !Array.isArray(value.events) ||
-    value.events.length > 6 ||
-    value.events.some(
-      (e) =>
-        !e ||
-        !Number.isInteger(e.tick) ||
-        e.tick < 0 ||
-        // eslint-disable-next-line anti-slop/no-runtime-typeof -- Validate untrusted saved/imported data at this native-JavaScript boundary before domain use.
-        typeof e.text !== "string" ||
-        e.text.length > 180,
-    )
-  )
-    return false;
-
-  return true;
-}
+export const validateWorld = (value: unknown): value is World =>
+  WorldSchema.safeParse(value).success;

@@ -1,4 +1,4 @@
-import { residentMode } from "./simulation.js";
+import { residentMode, type Cell, type Resident, type World } from "./simulation.ts";
 
 const NAMES = [
   "Pip",
@@ -15,14 +15,14 @@ const NAMES = [
   "Mochi",
 ];
 
-export const residentName = (resident) => NAMES[resident.id];
+export const residentName = (resident: Resident): string => NAMES[resident.id];
 
-export const patchName = (cell) =>
+export const patchName = (cell: Cell): string =>
   `Patch ${cell.id + 1} · ${cell.land ? "meadow" : "sea"} (${cell.q}, ${cell.r})`;
 
 // Observations are derived from the same current state as the artwork. No new
 // save fields, history, random names, or generated text are needed.
-export function residentObservation(world, resident) {
+export function residentObservation(world: World, resident: Resident): string {
   const mode = residentMode(world, resident);
 
   if (mode === "flying")
@@ -37,14 +37,13 @@ export function residentObservation(world, resident) {
   return "Wandering between meadows, looking for leafy, moist ground with less salt.";
 }
 
-export function patchObservation(world, cell) {
+export function patchObservation(world: World, cell: Cell): string {
   if (!cell.land)
     return world.salinity >= 30
       ? "The bowl’s briny sea welcomes kelp and shell boats. Water dilutes the brine."
       : "A quiet sea patch. A little more sea salt can welcome kelp and shell boats.";
 
-  if (cell.herbs <= 3)
-    return "Bare ground needs a pinch of herbs before roots can grow.";
+  if (cell.herbs <= 3) return "Bare ground needs a pinch of herbs before roots can grow.";
 
   if (cell.salt >= 65)
     return "Roots are wilting: local salt is at least 65%. Water rinses salt from this patch and its neighbours.";

@@ -8,17 +8,15 @@ Source is maintained in the private repository [aranlucas/spoonworld](https://gi
 
 ## Run
 
-Requires Node.js 22.12+ or 24+ and npm. No account, backend, AI provider, or API key.
+Requires Node.js 22.12+ or 24+ and pnpm (the version is pinned in `package.json`; `corepack enable` provides it). No account, backend, AI provider, or API key.
 
 ```sh
-npm ci
-npm run build
-npm start
+pnpm install
+pnpm build
+pnpm preview
 ```
 
-Open **http://127.0.0.1:4188**. The production build precaches all its own assets. Once **Offline ready** appears, reload and play without network access. Service workers require localhost or HTTPS. Development uses `npm run dev` at **https://spoonworld.localhost**, served through [Portless](https://github.com/vercel-labs/portless) (a dev dependency); its first run may ask for `sudo` to bind port 443 and trust a local certificate. Its unbuilt server does not install the offline cache.
-
-The portable app ZIP includes the built `dist/` directory. Unzip it and run `node scripts/serve.mjs`; no package installation is needed to play that bundle.
+`pnpm preview` serves the production build from workerd, Cloudflare's runtime, with the same `_headers` rules as production. The production build precaches all its own assets. Once **Offline ready** appears, reload and play without network access. Service workers require localhost or HTTPS. Development uses `pnpm dev` at **https://spoonworld.localhost**, served through [Portless](https://github.com/vercel-labs/portless) (a dev dependency); its first run may ask for `sudo` to bind port 443 and trust a local certificate. The dev server does not install the offline cache.
 
 ## Play
 
@@ -38,33 +36,30 @@ All data stays in this browser’s local storage. Ingredients are synthetic; the
 ## Verify
 
 ```sh
-npm test
-npx playwright install chromium
-npm run build
-npm run test:browser
-npm run format:check
+pnpm check                         # lint, format, typecheck, unit tests, build
+pnpm exec playwright install chromium
+pnpm test:browser                  # needs a prior pnpm build
 ```
 
-Browser tests use a single worker and temporary browser contexts. For an installed Chrome, use `PLAYWRIGHT_CHANNEL=chrome npm run test:browser`. The suite starts and stops only its own local server on port 4188.
+Unit tests run in Vitest. Browser tests use Playwright with a single worker and temporary browser contexts. For an installed Chrome, use `PLAYWRIGHT_CHANNEL=chrome pnpm test:browser`. The suite starts and stops only its own `vite preview` server on port 4188.
 
 Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveries, salt stress and water recovery, 3,000 randomized actions, save validation, import/export, corrupt-save recovery, quota failure/retry, exact undo/reset/persistence, offline reload, genuine emulated touch, keyboard/reduced motion, responsive layouts, frame budgets, and axe WCAG A/AA checks. See [QA.md](QA.md) and `evidence/` for measured results and limits.
 
 ## Structure and resource bounds
 
-- `src/simulation.js`: pure deterministic state transitions; 61 fixed patches and 12 inhabitants.
-- `src/storage.js`: bounded, validated save schema and recoverable storage operations.
-- `src/renderer.js`: original procedural artwork in one Phaser Canvas scene; native pointer input, a 960×640 canvas, 30 FPS target, at most 48 sprinkle particles.
-- `src/main.js`: DOM controls, notebook, keyboard mapping, fixed one-second ecology clock, persistence. Hidden tabs suspend the world; there is no offline time catch-up.
-- `src/naturalist.js`: named residents and readable patch observations derived from current simulation rules. No additional saved state or text generation service.
-- `scripts/build-offline.mjs`: generates a content-versioned precache from every production asset. Only this app’s own cache names are cleaned up.
-- `scripts/serve.mjs`: dependency-free static server with content types and a restrictive content security policy.
+- `src/simulation.ts`: pure deterministic state transitions; 61 fixed patches and 12 inhabitants. Zod schemas define the saved world shape and its bounds.
+- `src/storage.ts`: parses saved and imported JSON with Zod; recoverable storage operations.
+- `src/game.ts`: the world, its twelve-step undo history, selection, pause, and persistence behind a small subscribable store. No DOM.
+- `src/renderer.ts`: original procedural artwork in one Phaser Canvas scene; native pointer input, a 960×640 canvas, 30 FPS target, at most 48 sprinkle particles.
+- `src/App.tsx` and `src/components/`: React UI, native `<dialog>` notebooks, keyboard mapping, and the fixed one-second ecology clock. Hidden tabs suspend the world; there is no offline time catch-up.
+- `src/naturalist.ts`: named residents and readable patch observations derived from current simulation rules. No additional saved state or text generation service.
+- `scripts/offline-cache.ts`: Vite plugin that writes a content-versioned service worker precaching every production asset. Only this app’s own cache names are cleaned up.
+- `public/_headers`: content security policy and immutable caching for hashed assets on Cloudflare.
 
-Art, ingredient icons, sproutlings, bowl decoration, and sound were made for this project in code. No downloaded art or generated provider assets. Phaser 3.90.0 is pinned as an established 2D runtime; Vite, Playwright, axe, and Prettier are development tools. The lockfile pins all resolved registry packages.
+Art, ingredient icons, sproutlings, bowl decoration, and sound were made for this project in code. No downloaded art or generated provider assets. Phaser 3.90.0 is pinned as an established 2D runtime, React renders the controls, and Zod validates saves. Vite, the Cloudflare Vite plugin, Wrangler, TypeScript, Vitest, Playwright, axe, oxlint, and oxfmt are development tools. The lockfile pins all resolved registry packages.
 
 ## Hosting configuration
 
-`railway.json` builds the static bundle and runs the server using Railway’s `PORT`, binding to `0.0.0.0`. `wrangler.jsonc` points Cloudflare Workers static assets at `dist/`; Cloudflare Pages can also use build command `npm run build`, output directory `dist`.
+Spoonworld deploys as a static-assets-only Cloudflare Worker. `wrangler.jsonc` names the Worker; the Cloudflare Vite plugin writes the deployable config into `dist/`. `pnpm run deploy` builds and runs `wrangler deploy`, which needs a Cloudflare login.
 
 No infrastructure has been provisioned and no public release has been performed. Deployment requires a deliberate later action. See [DECISIONS.md](DECISIONS.md) for the research brief and next experiments.
-
-To regenerate the portable source, Git bundle, and built-app archives from a clean committed checkout, run `npm run build` followed by `python3 scripts/package.py` (Python 3 and Git are needed only for packaging).

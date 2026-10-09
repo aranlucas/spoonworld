@@ -2,14 +2,11 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "browser.spec.mjs",
+  testMatch: "*.spec.ts",
   workers: 1,
   fullyParallel: false,
   timeout: 30000,
-  reporter: [
-    ["list"],
-    ["json", { outputFile: "evidence/browser-results.json" }],
-  ],
+  reporter: [["list"], ["json", { outputFile: "evidence/browser-results.json" }]],
   use: {
     baseURL: "http://127.0.0.1:4188",
     browserName: "chromium",
@@ -18,10 +15,11 @@ export default defineConfig({
     viewport: { width: 1440, height: 1100 },
     trace: "retain-on-failure",
   },
+  // Serves the production build from workerd, as Cloudflare would.
   webServer: {
-    command: "node scripts/serve.mjs",
+    command: "pnpm exec vite preview --host 127.0.0.1 --port 4188 --strictPort",
     url: "http://127.0.0.1:4188",
     reuseExistingServer: false,
-    timeout: 10000,
+    timeout: 30000,
   },
 });
