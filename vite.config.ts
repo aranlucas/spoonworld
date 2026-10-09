@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { VitePWA } from "vite-plugin-pwa";
+import { getWorkerAssetsDir } from "@cloudflare/build-output-utils";
 
 export default defineConfig({
   plugins: [
@@ -9,6 +10,13 @@ export default defineConfig({
     cloudflare(),
     // Installable, offline-first PWA: Workbox precaches every shipped asset.
     VitePWA({
+      // The Cloudflare plugin moves client assets into cf's Build Output after
+      // this plugin resolves, so ask the Build Output spec where they go.
+      integration: {
+        configureOptions(config, options) {
+          options.outDir = getWorkerAssetsDir(config.root);
+        },
+      },
       injectRegister: false,
       registerType: "autoUpdate",
       manifest: {

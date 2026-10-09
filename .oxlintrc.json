@@ -12,7 +12,8 @@
     ".roo/**",
     ".windsurf/**",
     "tools/oxlint/anti-slop/**",
-    "dist/**"
+    "dist/**",
+    ".cloudflare/**"
   ],
   "jsPlugins": [
     {

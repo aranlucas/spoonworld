@@ -43,7 +43,7 @@ pnpm test:browser                  # needs a prior pnpm build
 
 Unit tests run in Vitest. Browser tests use Playwright with a single worker and temporary browser contexts. For an installed Chrome, use `PLAYWRIGHT_CHANNEL=chrome pnpm test:browser`. The suite starts and stops only its own `vite preview` server on port 4188.
 
-Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveries, salt stress and water recovery, 3,000 randomized actions, save validation, import/export, corrupt-save recovery, quota failure/retry, exact undo/reset/persistence, offline reload, genuine emulated touch, keyboard/reduced motion, responsive layouts, frame budgets, and axe WCAG A/AA checks. See [QA.md](QA.md) and `evidence/` for measured results and limits.
+Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveries, salt stress and water recovery, 3,000 randomized actions, save validation, import/export, corrupt-save recovery, quota failure/retry, exact undo/reset/persistence, offline reload, genuine emulated touch, keyboard/reduced motion, responsive layouts, frame budgets, and axe WCAG A/AA checks. See [QA.md](QA.md) for measured results and limits; `evidence/` holds screenshots.
 
 ## Structure and resource bounds
 
@@ -56,10 +56,10 @@ Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveri
 - `vite.config.ts`: an installable PWA via `vite-plugin-pwa`. The web manifest and a Workbox service worker that precaches every shipped asset are generated at build time.
 - `public/_headers`: content security policy and immutable caching for hashed assets on Cloudflare.
 
-Art, ingredient icons, sproutlings, bowl decoration, and sound were made for this project in code. No downloaded art or generated provider assets. Phaser 3.90.0 is pinned as an established 2D runtime, React renders the controls, and Zod validates saves. Vite, vite-plugin-pwa (Workbox), the Cloudflare Vite plugin, Wrangler, TypeScript, Vitest, Playwright, axe, oxlint, and oxfmt are development tools. The lockfile pins all resolved registry packages.
+Art, ingredient icons, sproutlings, bowl decoration, and sound were made for this project in code. No downloaded art or generated provider assets. Phaser 3.90.0 is pinned as an established 2D runtime, React renders the controls, and Zod validates saves. Vite, vite-plugin-pwa (Workbox), the Cloudflare Vite plugin (beta), the `cf` CLI, TypeScript, Vitest, Playwright, axe, oxlint, and oxfmt are development tools. The lockfile pins all resolved registry packages.
 
 ## Hosting configuration
 
-Spoonworld deploys as a static-assets-only Cloudflare Worker. `wrangler.jsonc` names the Worker; the Cloudflare Vite plugin writes the deployable config into `dist/`. `pnpm run deploy` builds and runs `wrangler deploy`, which needs a Cloudflare login.
+Spoonworld deploys as a static-assets-only Cloudflare Worker with the [`cf` CLI](https://github.com/cloudflare/cf). `cloudflare.config.ts` names the Worker; the Cloudflare Vite plugin writes Cloudflare's Build Output to `.cloudflare/output/`. `pnpm run deploy` runs `cf deploy`, which builds and uploads it; log in first with `pnpm exec cf auth login`.
 
 No infrastructure has been provisioned and no public release has been performed. Deployment requires a deliberate later action. See [DECISIONS.md](DECISIONS.md) for the research brief and next experiments.
