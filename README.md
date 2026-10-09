@@ -20,6 +20,33 @@ Open **http://127.0.0.1:4188**. The production build precaches all its own asset
 
 The portable app ZIP includes the built `dist/` directory. Unzip it and run `node scripts/serve.mjs`; no package installation is needed to play that bundle.
 
+### Named local URL with Portless
+
+[Portless](https://github.com/vercel-labs/portless/tree/v0.15.7) gives this checkout a
+stable local URL. Complete the local setup above, use **Node.js 24 or newer**
+(within this project's supported range), then run:
+
+```sh
+npm install -g portless@0.15.7
+npm run dev:portless
+```
+
+Open **https://spoonworld.localhost** with the default proxy settings.
+Portless starts its shared proxy automatically. Its first HTTPS run creates and
+trusts a local certificate authority and may prompt for administrator privileges
+to bind port 443 or update local hostname entries. Start it from an interactive
+terminal and review those prompts. `portless doctor` diagnoses local setup issues.
+
+Portless supplies Vite with a free port, a loopback host, and `--strictPort`.
+
+Linked Git worktrees receive a branch-name prefix, such as
+`https://fix-ui.spoonworld.localhost`; use the URL Portless prints.
+Use `npm run dev` for the existing direct-server workflow.
+
+Browser storage and offline caches belong to each origin. Existing data at a
+numbered localhost URL stays there; use the app's export/import flow when available
+to move data to the named URL.
+
 ## Play
 
 - Pick an ingredient, then tap a patch. Nearby patches receive a lighter dose. **Add a pinch** uses the last chosen patch.
