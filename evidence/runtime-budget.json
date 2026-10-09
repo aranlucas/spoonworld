@@ -1,13 +1,13 @@
 {
-  "browser": "154.0.8037.95",
-  "elapsedMs": 3010,
+  "browser": "156.0.8078.4",
+  "elapsedMs": 3012,
   "simulationTicks": 3,
   "renderFrames": 89,
   "budget": {
     "particles": 0,
     "canvas": 614400,
     "fps": 30,
-    "frames": 91,
+    "frames": 90,
     "history": 0,
     "cells": 61,
     "residents": 12,
@@ -17,19 +17,19 @@
   "metrics": [
     {
       "name": "Nodes",
-      "value": 1105
+      "value": 2001
     },
     {
       "name": "TaskDuration",
-      "value": 0.1702
+      "value": 0.177695
     },
     {
       "name": "JSHeapUsedSize",
-      "value": 7799128
+      "value": 9367504
     },
     {
       "name": "JSHeapTotalSize",
-      "value": 11862016
+      "value": 18169856
     }
   ]
 }
