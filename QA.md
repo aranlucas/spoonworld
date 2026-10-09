@@ -22,13 +22,7 @@ The short runtime sample used **Chrome 154.0.8037.95** on this Mac: about 3 tick
 
 ## Evidence
 
-- `evidence/desktop-initial.png`: original first playable view.
-- `evidence/desktop-bubble-ferry.png`: all five discoveries and flying inhabitants.
-- `evidence/field-guide.png`: illustrated discovered entries and explanations.
-- `evidence/mobile.png`: mobile world, touch placement, pantry, and controls.
-- `evidence/offline.png`: functional offline session after a disconnected reload.
-- `evidence/patch-notebook.png`: readable local salt stress and precise ingredient controls.
-- `evidence/mobile-notebook.png` and `evidence/mobile-notebook-actions.png`: scrollable mobile patch notebook and usable actions.
+Each `pnpm test:browser` run saves screenshots of the first view, all five discoveries, the field guide, mobile, offline, and the patch notebook to `test-results/`.
 
 Each `pnpm test:browser` run also writes machine-readable results, accessibility reports, and runtime budgets to the gitignored `test-results/` directory.
 
