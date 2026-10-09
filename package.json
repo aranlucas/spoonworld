@@ -8,7 +8,7 @@
     "dev": "portless run vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "vite build && wrangler deploy",
+    "deploy": "cf deploy",
     "typecheck": "tsc -p .",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -26,20 +26,24 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
-    "@cloudflare/vite-plugin": "1.63.1",
+    "@cloudflare/build-output-utils": "0.9.0",
+    "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02",
     "@oxlint/plugins": "1.86.0",
     "@playwright/test": "1.64.0",
     "@types/node": "^24.19.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "cf": "1.0.0-beta.14",
     "oxfmt": "0.72.0",
     "oxlint": "1.86.0",
     "portless": "0.15.7",
     "typescript": "7.0.2",
     "vite": "8.3.4",
+    "vite-plugin-pwa": "2.0.0",
     "vitest": "5.0.3",
-    "wrangler": "4.149.0"
+    "workbox-build": "7.4.1",
+    "workbox-window": "7.4.1"
   },
   "engines": {
     "node": ">=22.12"

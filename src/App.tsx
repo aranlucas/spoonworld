@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { registerSW } from "virtual:pwa-register";
 import { describeWorld, weather, INGREDIENTS, type World } from "./simulation.ts";
 import type { Game } from "./game.ts";
 import type { Sound } from "./audio.ts";
@@ -207,11 +208,12 @@ export function App(props: AppProps) {
       );
 
     if (import.meta.env.PROD && "serviceWorker" in navigator)
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then(() => navigator.serviceWorker.ready)
-        .then(() => setOffline("Offline ready"))
-        .catch(() => setOffline("Offline cache unavailable"));
+      registerSW({
+        immediate: true,
+        onRegisteredSW: () =>
+          void navigator.serviceWorker.ready.then(() => setOffline("Offline ready")),
+        onRegisterError: () => setOffline("Offline cache unavailable"),
+      });
   }, [game, notify]);
 
   // Read-only diagnostics for tests and resource inspection. No external calls.

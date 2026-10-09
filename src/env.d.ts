@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/client" />
 import type { IngredientId, World } from "./simulation.ts";
 import type { WorldRenderer } from "./renderer.ts";
 

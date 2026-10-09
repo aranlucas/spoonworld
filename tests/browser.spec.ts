@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createWorld, type IngredientId } from "../src/simulation.ts";
 import { parseSave } from "../src/storage.ts";
 import AxeBuilder from "@axe-core/playwright";
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 
 const pause = async (page: Page) => {
   await page.locator("#pause").click();
@@ -310,8 +310,9 @@ test("desktop, guide, and mobile have no serious accessibility violations", asyn
     surface: "mobile patch notebook",
     ...(await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()),
   });
+  await mkdir("test-results", { recursive: true });
   await writeFile(
-    "evidence/accessibility-results.json",
+    "test-results/accessibility-results.json",
     JSON.stringify(
       reports.map(({ surface, violations }) => ({ surface, violations })),
       null,
@@ -456,7 +457,8 @@ test("runtime clock advances and the renderer respects its bounded frame budget"
     ),
   };
 
-  await writeFile("evidence/runtime-budget.json", JSON.stringify(report, null, 2));
+  await mkdir("test-results", { recursive: true });
+  await writeFile("test-results/runtime-budget.json", JSON.stringify(report, null, 2));
   expect(report.simulationTicks).toBeGreaterThanOrEqual(2);
   expect(report.simulationTicks).toBeLessThanOrEqual(4);
   expect(report.renderFrames).toBeGreaterThan(10);
