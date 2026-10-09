@@ -88,7 +88,8 @@ describe("simulation", () => {
     expect(w.events.length).toBeLessThanOrEqual(6);
     expect(w.discovered.length).toBeLessThanOrEqual(5);
     expect(serializeSave(w, []).length).toBeLessThan(18000);
-  });
+    // 3,000 full save validations take ~1s locally but much longer on shared CI runners.
+  }, 30_000);
 });
 
 describe("storage", () => {
