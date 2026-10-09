@@ -18,7 +18,7 @@ Spoonworld is an implemented, playable prototype. The production build, determin
 
 The simulation stress test performed **3,000 seeded random ingredient actions and 9,000 ecology ticks**, validating the entire state after each action. Patch and resident counts remain fixed at 61 and 12; event history is capped at six, undo history at twelve, values at 0–100, and visual sprinkle particles at 48. The serialized current world stayed below 18 kB in the stress test.
 
-The short runtime sample used **Chrome 154.0.8037.95** on this Mac: about 3 ticks and 90 rendered frames in 3 seconds, with approximately **7 MB of used JavaScript heap** at the sampled point. Rendering targets 30 FPS on one 960×640 Canvas. This is a three-second sample, not a multi-hour memory or CPU soak; see `evidence/runtime-budget.json` for exact metrics.
+The short runtime sample used **Chrome 154.0.8037.95** on this Mac: about 3 ticks and 90 rendered frames in 3 seconds, with approximately **7 MB of used JavaScript heap** at the sampled point. Rendering targets 30 FPS on one 960×640 Canvas. This is a three-second sample, not a multi-hour memory or CPU soak; `pnpm test:browser` writes exact metrics to `test-results/runtime-budget.json`.
 
 ## Evidence
 
@@ -29,9 +29,8 @@ The short runtime sample used **Chrome 154.0.8037.95** on this Mac: about 3 tick
 - `evidence/offline.png`: functional offline session after a disconnected reload.
 - `evidence/patch-notebook.png`: readable local salt stress and precise ingredient controls.
 - `evidence/mobile-notebook.png` and `evidence/mobile-notebook-actions.png`: scrollable mobile patch notebook and usable actions.
-- `evidence/browser-results.json`: machine-readable final browser test results.
-- `evidence/accessibility-results.json`: tested surfaces and empty violation arrays.
-- `evidence/runtime-budget.json`: browser version, fixed budgets, frame/tick counts, heap metrics.
+
+Each `pnpm test:browser` run also writes machine-readable results, accessibility reports, and runtime budgets to the gitignored `test-results/` directory.
 
 ## Bugs found and fixed
 
