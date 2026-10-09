@@ -16,7 +16,7 @@ npm run build
 npm start
 ```
 
-Open **http://127.0.0.1:4188**. The production build precaches all its own assets. Once **Offline ready** appears, reload and play without network access. Service workers require localhost or HTTPS. Development uses `npm run dev`; its unbuilt server does not install the offline cache.
+Open **http://127.0.0.1:4188**. The production build precaches all its own assets. Once **Offline ready** appears, reload and play without network access. Service workers require localhost or HTTPS. Development uses `npm run dev` at **https://spoonworld.localhost**, served through [Portless](https://github.com/vercel-labs/portless) (a dev dependency); its first run may ask for `sudo` to bind port 443 and trust a local certificate. Its unbuilt server does not install the offline cache.
 
 The portable app ZIP includes the built `dist/` directory. Unzip it and run `node scripts/serve.mjs`; no package installation is needed to play that bundle.
 
