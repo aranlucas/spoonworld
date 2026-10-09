@@ -53,10 +53,10 @@ Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveri
 - `src/renderer.ts`: original procedural artwork in one Phaser Canvas scene; native pointer input, a 960×640 canvas, 30 FPS target, at most 48 sprinkle particles.
 - `src/App.tsx` and `src/components/`: React UI, native `<dialog>` notebooks, keyboard mapping, and the fixed one-second ecology clock. Hidden tabs suspend the world; there is no offline time catch-up.
 - `src/naturalist.ts`: named residents and readable patch observations derived from current simulation rules. No additional saved state or text generation service.
-- `scripts/offline-cache.ts`: Vite plugin that writes a content-versioned service worker precaching every production asset. Only this app’s own cache names are cleaned up.
+- `vite.config.ts`: an installable PWA via `vite-plugin-pwa`. The web manifest and a Workbox service worker that precaches every shipped asset are generated at build time.
 - `public/_headers`: content security policy and immutable caching for hashed assets on Cloudflare.
 
-Art, ingredient icons, sproutlings, bowl decoration, and sound were made for this project in code. No downloaded art or generated provider assets. Phaser 3.90.0 is pinned as an established 2D runtime, React renders the controls, and Zod validates saves. Vite, the Cloudflare Vite plugin, Wrangler, TypeScript, Vitest, Playwright, axe, oxlint, and oxfmt are development tools. The lockfile pins all resolved registry packages.
+Art, ingredient icons, sproutlings, bowl decoration, and sound were made for this project in code. No downloaded art or generated provider assets. Phaser 3.90.0 is pinned as an established 2D runtime, React renders the controls, and Zod validates saves. Vite, vite-plugin-pwa (Workbox), the Cloudflare Vite plugin, Wrangler, TypeScript, Vitest, Playwright, axe, oxlint, and oxfmt are development tools. The lockfile pins all resolved registry packages.
 
 ## Hosting configuration
 
