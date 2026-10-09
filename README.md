@@ -16,19 +16,20 @@ npm run build
 npm start
 ```
 
-Open **http://127.0.0.1:4188**. The production build precaches all its own assets. Once **Offline ready** appears, reload and play without network access. Service workers require localhost or HTTPS. Development uses `npm run dev`; its unbuilt server does not install the offline cache.
+Open **http://127.0.0.1:4188**. The production build precaches all its own assets. Once **Offline ready** appears, reload and play without network access. Service workers require localhost or HTTPS. Development uses `npm run dev` at **https://spoonworld.localhost**; its unbuilt server does not install the offline cache.
 
 The portable app ZIP includes the built `dist/` directory. Unzip it and run `node scripts/serve.mjs`; no package installation is needed to play that bundle.
 
-### Named local URL with Portless
+### Development URL with Portless
 
-[Portless](https://github.com/vercel-labs/portless/tree/v0.15.7) gives this checkout a
-stable local URL. Complete the local setup above, use **Node.js 24 or newer**
-(within this project's supported range), then run:
+The normal `npm run dev` command uses
+[Portless](https://github.com/vercel-labs/portless/tree/v0.15.7) for a stable local URL.
+Install its CLI once with **Node.js 24 or newer** (within this project's supported
+range), then run:
 
 ```sh
 npm install -g portless@0.15.7
-npm run dev:portless
+npm run dev
 ```
 
 Open **https://spoonworld.localhost** with the default proxy settings.
@@ -41,7 +42,7 @@ Portless supplies Vite with a free port, a loopback host, and `--strictPort`.
 
 Linked Git worktrees receive a branch-name prefix, such as
 `https://fix-ui.spoonworld.localhost`; use the URL Portless prints.
-Use `npm run dev` for the existing direct-server workflow.
+Use `npm run dev:direct` to run the original localhost server without Portless.
 
 Browser storage and offline caches belong to each origin. Existing data at a
 numbered localhost URL stays there; use the app's export/import flow when available

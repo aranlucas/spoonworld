@@ -5,8 +5,8 @@
   "type": "module",
   "description": "A local-first ingredient ecology toy: a tiny world, by the spoonful.",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "dev:portless": "portless run --name spoonworld vite",
+    "dev": "portless run --name spoonworld vite",
+    "dev:direct": "vite --host 127.0.0.1",
     "build": "vite build && node scripts/build-offline.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "start": "node scripts/serve.mjs",
