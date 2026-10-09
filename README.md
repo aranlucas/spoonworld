@@ -4,8 +4,6 @@ A tiny ingredient ecology toy, served in a ceramic bowl. Sprinkle a pantry ingre
 
 Source is maintained in the private repository [aranlucas/spoonworld](https://github.com/aranlucas/spoonworld). Clone with `git clone https://github.com/aranlucas/spoonworld.git`.
 
-![Spoonworld](evidence/desktop-bubble-ferry.png)
-
 ## Run
 
 Requires Node.js 22.12+ or 24+ and pnpm (the version is pinned in `package.json`; `corepack enable` provides it). No account, backend, AI provider, or API key.
@@ -43,7 +41,7 @@ pnpm test:browser                  # needs a prior pnpm build
 
 Unit tests run in Vitest. Browser tests use Playwright with a single worker and temporary browser contexts. For an installed Chrome, use `PLAYWRIGHT_CHANNEL=chrome pnpm test:browser`. The suite starts and stops only its own `vite preview` server on port 4188.
 
-Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveries, salt stress and water recovery, 3,000 randomized actions, save validation, import/export, corrupt-save recovery, quota failure/retry, exact undo/reset/persistence, offline reload, genuine emulated touch, keyboard/reduced motion, responsive layouts, frame budgets, and axe WCAG A/AA checks. See [QA.md](QA.md) for measured results and limits; `evidence/` holds screenshots.
+Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveries, salt stress and water recovery, 3,000 randomized actions, save validation, import/export, corrupt-save recovery, quota failure/retry, exact undo/reset/persistence, offline reload, genuine emulated touch, keyboard/reduced motion, responsive layouts, frame budgets, and axe WCAG A/AA checks. See [QA.md](QA.md) for measured results and limits. Each run saves screenshots and reports to the gitignored `test-results/`.
 
 ## Structure and resource bounds
 

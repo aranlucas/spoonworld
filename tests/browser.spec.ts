@@ -50,7 +50,7 @@ test("desktop boots without errors or third-party requests; screenshot", async (
   await expect(page.locator("h1")).toHaveText("A world by the spoonful.");
   await page.waitForTimeout(300);
   await page.screenshot({
-    path: "evidence/desktop-initial.png",
+    path: "test-results/desktop-initial.png",
     fullPage: true,
   });
   await pause(page);
@@ -86,13 +86,13 @@ test("all five goals work through the UI; illustrated guide screenshot", async (
   expect(w.fizz).toBeGreaterThan(10);
   await expect(page.locator("#toast")).not.toBeVisible();
   await page.screenshot({
-    path: "evidence/desktop-bubble-ferry.png",
+    path: "test-results/desktop-bubble-ferry.png",
     fullPage: true,
   });
   await page.locator(".guide-button").first().click();
   await expect(page.locator(".guide-entry.discovered")).toHaveCount(5);
   await expect(page.locator("#guide-dialog")).toContainText("The bubble ferry");
-  await page.screenshot({ path: "evidence/field-guide.png", fullPage: true });
+  await page.screenshot({ path: "test-results/field-guide.png", fullPage: true });
   await page.keyboard.press("Escape");
   await expect(page.locator("#guide-dialog")).not.toBeVisible();
 });
@@ -219,7 +219,7 @@ test("production works after an offline reload, including ingredients and persis
   expect(await snapshot(page)).toEqual(before);
   await add(page, "sugar");
   expect((await snapshot(page)).discovered).toContain("glow");
-  await page.screenshot({ path: "evidence/offline.png", fullPage: true });
+  await page.screenshot({ path: "test-results/offline.png", fullPage: true });
   await context.setOffline(false);
 });
 
@@ -241,7 +241,7 @@ test.describe("touch device", () => {
       true,
     );
     await expect(page.locator("#toast")).not.toBeVisible();
-    await page.screenshot({ path: "evidence/mobile.png", fullPage: true });
+    await page.screenshot({ path: "test-results/mobile.png", fullPage: true });
     await page.locator(".guide-button").first().click();
     await expect(page.locator("#guide-dialog")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -364,7 +364,7 @@ test("patch notebook allows precise text-only play, explains stress, and restore
   expect(await snapshot(page)).toEqual(salted);
   await expect(page.locator("#patch-observation")).toContainText("Roots are wilting");
   await page.screenshot({
-    path: "evidence/patch-notebook.png",
+    path: "test-results/patch-notebook.png",
     fullPage: true,
   });
   await page.keyboard.press("Escape");
@@ -407,7 +407,7 @@ test("named sproutling notes match immediate ferry mode and link to a home patch
   await expect(page.locator("#patch-residents")).toContainText("Pip");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({
-    path: "evidence/mobile-notebook.png",
+    path: "test-results/mobile-notebook.png",
     fullPage: true,
   });
   await page.locator("#patch-ingredient").selectOption("water");
@@ -418,7 +418,7 @@ test("named sproutling notes match immediate ferry mode and link to a home patch
   await expect(page.locator("#patch-sprinkle")).toBeVisible();
   expect((await box(page.locator("#patch-sprinkle"))).height).toBeGreaterThanOrEqual(44);
   await page.screenshot({
-    path: "evidence/mobile-notebook-actions.png",
+    path: "test-results/mobile-notebook-actions.png",
     fullPage: true,
   });
 });
