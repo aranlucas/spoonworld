@@ -11,14 +11,13 @@
     ".pi/**",
     ".roo/**",
     ".windsurf/**",
-    "tools/oxlint/anti-slop/**",
     "dist/**",
     ".cloudflare/**"
   ],
   "jsPlugins": [
     {
       "name": "anti-slop",
-      "specifier": "./tools/oxlint/anti-slop/index.ts"
+      "specifier": "@aranlucas/oxlint-plugin-anti-slop"
     }
   ],
   "rules": {
