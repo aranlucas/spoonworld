@@ -11,8 +11,8 @@ import {
   hashSeed,
   MAX_HISTORY,
   type IngredientId,
-} from "../src/simulation.ts";
-import { parseSave, serializeSave, saveWorld, loadSave, SAVE_KEY } from "../src/storage.ts";
+} from "@/simulation.ts";
+import { parseSave, serializeSave, saveWorld, loadSave, SAVE_KEY } from "@/storage.ts";
 
 describe("simulation", () => {
   test("Unicode seed hashes remain compatible with saved worlds", () => {
