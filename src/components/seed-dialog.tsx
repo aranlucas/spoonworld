@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Dialog } from "./Dialog.tsx";
+import { Dialog } from "./dialog.tsx";
 
 const PRESETS = ["lemon-garden", "sunday-soup", "wild-thyme"];
 

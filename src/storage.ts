@@ -21,7 +21,9 @@ export type SaveStorage = Pick<Storage, "getItem" | "setItem">;
 
 // Saved and imported text is untrusted until it parses as a whole save.
 export function parseSave(raw: string): SaveData {
-  if (raw.length > MAX_SAVE_BYTES) throw new Error("This world file is too large or unreadable.");
+  if (raw.length > MAX_SAVE_BYTES) {
+    throw new Error("This world file is too large or unreadable.");
+  }
 
   return SaveSchema.parse(JSON.parse(raw));
 }
@@ -32,7 +34,10 @@ export function serializeSave(world: World, history: World[]): string {
 
 export function loadSave(storage: SaveStorage | null): LoadResult {
   try {
-    if (!storage) throw new Error("Storage is unavailable.");
+    if (!storage) {
+      throw new Error("Storage is unavailable.");
+    }
+
     const raw = storage.getItem(SAVE_KEY);
 
     return raw ? { ...parseSave(raw), status: "loaded" } : { status: "empty" };
@@ -43,7 +48,10 @@ export function loadSave(storage: SaveStorage | null): LoadResult {
 
 export function saveWorld(storage: SaveStorage | null, world: World, history: World[]): boolean {
   try {
-    if (!storage) return false;
+    if (!storage) {
+      return false;
+    }
+
     storage.setItem(SAVE_KEY, serializeSave(world, history));
 
     return true;

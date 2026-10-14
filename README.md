@@ -49,7 +49,7 @@ Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveri
 - `src/storage.ts`: parses saved and imported JSON with Zod; recoverable storage operations.
 - `src/game.ts`: the world, its twelve-step undo history, selection, pause, and persistence behind a small subscribable store. No DOM.
 - `src/renderer.ts`: original procedural artwork in one Phaser Canvas scene; native pointer input, a 960×640 canvas, 30 FPS target, at most 48 sprinkle particles.
-- `src/App.tsx` and `src/components/`: React UI, native `<dialog>` notebooks, keyboard mapping, and the fixed one-second ecology clock. Hidden tabs suspend the world; there is no offline time catch-up.
+- `src/app.tsx` and `src/components/`: React UI, native `<dialog>` notebooks, keyboard mapping, and the fixed one-second ecology clock. Hidden tabs suspend the world; there is no offline time catch-up.
 - `src/naturalist.ts`: named residents and readable patch observations derived from current simulation rules. No additional saved state or text generation service.
 - `vite.config.ts`: an installable PWA via `vite-plugin-pwa`. The web manifest and a Workbox service worker that precaches every shipped asset are generated at build time.
 - `public/_headers`: content security policy and immutable caching for hashed assets on Cloudflare.

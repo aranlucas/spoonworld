@@ -226,6 +226,8 @@ export function hashSeed(seed: string): number {
   let hash = 2166136261;
 
   for (const c of seed) {
+    // Keep the original UTF-16 hash so saved Unicode seeds reproduce their worlds.
+    // eslint-disable-next-line unicorn/prefer-code-point
     hash ^= c.charCodeAt(0);
     hash = Math.imul(hash, 16777619);
   }
@@ -251,11 +253,14 @@ export function createWorld(requestedSeed = "little-soup"): World {
   const rng = random(hashSeed(seed));
   const cells: Cell[] = [];
 
-  for (let r = -4; r <= 4; r++)
+  for (let r = -4; r <= 4; r++) {
     for (let q = -4; q <= 4; q++) {
       const radius = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
 
-      if (radius > 4) continue;
+      if (radius > 4) {
+        continue;
+      }
+
       cells.push({
         id: cells.length,
         q,
@@ -271,6 +276,7 @@ export function createWorld(requestedSeed = "little-soup"): World {
         flowers: 0,
       });
     }
+  }
 
   const land = cells.filter((c) => c.land);
 
@@ -318,16 +324,19 @@ function discover(world: World) {
     ferry: world.fizz > 10,
   };
 
-  for (const entry of GUIDE)
+  for (const entry of GUIDE) {
     if (conditions[entry.id] && !world.discovered.includes(entry.id)) {
       world.discovered.push(entry.id);
       record(world, `Field note found: ${entry.title}.`);
     }
+  }
 }
 
 export function addIngredient(previous: World, ingredient: IngredientId, cellId: number): World {
-  if (!INGREDIENTS.some((i) => i.id === ingredient) || !previous.cells[cellId])
+  if (!INGREDIENTS.some((i) => i.id === ingredient) || !previous.cells[cellId]) {
     throw new Error("Choose a pantry ingredient and a world patch.");
+  }
+
   const world = structuredClone(previous);
   const target = world.cells[cellId];
   world.doses = Math.min(world.doses + 1, 1000000);
@@ -335,23 +344,37 @@ export function addIngredient(previous: World, ingredient: IngredientId, cellId:
   for (const c of world.cells) {
     const distance = hexDistance(c, target);
 
-    if (distance > 1) continue;
+    if (distance > 1) {
+      continue;
+    }
+
     const weight = distance === 0 ? 1 : 0.38;
 
-    if (ingredient === "herbs") c.herbs = clamp(c.herbs + 42 * weight);
+    if (ingredient === "herbs") {
+      c.herbs = clamp(c.herbs + 42 * weight);
+    }
 
     if (ingredient === "water") {
       c.moisture = clamp(c.moisture + 30 * weight);
       c.salt = clamp(c.salt - 18 * weight);
     }
 
-    if (ingredient === "salt") c.salt = clamp(c.salt + 36 * weight);
+    if (ingredient === "salt") {
+      c.salt = clamp(c.salt + 36 * weight);
+    }
 
-    if (ingredient === "sugar") c.sugar = clamp(c.sugar + 34 * weight);
+    if (ingredient === "sugar") {
+      c.sugar = clamp(c.sugar + 34 * weight);
+    }
 
-    if (ingredient === "lemon") c.acid = clamp(c.acid + 40 * weight);
+    if (ingredient === "lemon") {
+      c.acid = clamp(c.acid + 40 * weight);
+    }
 
-    if (ingredient === "soda") c.soda = clamp(c.soda + 40 * weight);
+    if (ingredient === "soda") {
+      c.soda = clamp(c.soda + 40 * weight);
+    }
+
     const reaction = Math.min(c.acid, c.soda);
 
     if (reaction >= 4) {
@@ -367,7 +390,9 @@ export function addIngredient(previous: World, ingredient: IngredientId, cellId:
     world.salinity = clamp(world.salinity - 8);
   }
 
-  if (ingredient === "salt") world.salinity = clamp(world.salinity + 14);
+  if (ingredient === "salt") {
+    world.salinity = clamp(world.salinity + 14);
+  }
 
   if (ingredient === "chili") {
     world.heat = clamp(world.heat + 21);
@@ -391,33 +416,37 @@ export function addIngredient(previous: World, ingredient: IngredientId, cellId:
 }
 
 export function weather(world: World): Weather {
-  if (world.fizz > 10)
+  if (world.fizz > 10) {
     return {
       name: "Bubble breeze",
       symbol: "◌",
       text: "The sproutlings are catching a lift.",
     };
+  }
 
-  if (world.heat >= 42 && world.humidity >= 58)
+  if (world.heat >= 42 && world.humidity >= 58) {
     return {
       name: "Kitchen rain",
       symbol: "☂",
       text: "Warm air turns moisture into gentle rain.",
     };
+  }
 
-  if (world.heat >= 42)
+  if (world.heat >= 42) {
     return {
       name: "Spicy winds",
       symbol: "〰",
       text: "Warm air is drying the meadow.",
     };
+  }
 
-  if (world.salinity >= 30)
+  if (world.salinity >= 30) {
     return {
       name: "Briny & bright",
       symbol: "≈",
       text: "Shell boats explore the salty shallows.",
     };
+  }
 
   return {
     name: "Soft & sunny",
@@ -437,8 +466,10 @@ export function residentMode(world: World, resident: Resident): ResidentMode {
 }
 
 export function stepWorld(previous: World, steps = 1): World {
-  if (!Number.isInteger(steps) || steps < 0 || steps > 10000)
+  if (!Number.isInteger(steps) || steps < 0 || steps > 10000) {
     throw new Error("Invalid simulation step count.");
+  }
+
   const world = structuredClone(previous);
 
   for (let i = 0; i < steps; i++) {
@@ -451,8 +482,10 @@ export function stepWorld(previous: World, steps = 1): World {
     for (const c of world.cells) {
       c.moisture = clamp(c.moisture + (rain ? 0.55 : -0.08 - Math.max(0, world.heat - 40) * 0.012));
 
-      if (c.land && c.herbs > 3)
+      if (c.land && c.herbs > 3) {
         c.herbs = clamp(c.herbs + (c.moisture > 25 && c.salt < 65 ? 0.13 : -0.18));
+      }
+
       c.sugar = clamp(c.sugar - 0.025);
       c.flowers = clamp(
         c.flowers + (c.herbs > 35 && c.sugar > 15 && c.moisture > 25 ? 0.5 : -0.12),

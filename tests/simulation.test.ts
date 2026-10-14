@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { ZodError } from "zod";
 import {
   createWorld,
   addIngredient,
@@ -14,6 +15,10 @@ import {
 import { parseSave, serializeSave, saveWorld, loadSave, SAVE_KEY } from "../src/storage.ts";
 
 describe("simulation", () => {
+  test("Unicode seed hashes remain compatible with saved worlds", () => {
+    expect(hashSeed("🌿")).toBe(948053755);
+    expect(hashSeed("🌿thyme")).toBe(2443961704);
+  });
   test("seeded terrain and inhabitants reproduce; distinct seeds vary", () => {
     expect(createWorld("thyme")).toEqual(createWorld("thyme"));
     expect(createWorld("thyme").cells).not.toEqual(createWorld("salt").cells);
@@ -24,13 +29,16 @@ describe("simulation", () => {
   test("fixed clock is independent of batch size", () => {
     let a = createWorld("test");
 
-    for (let i = 0; i < 100; i++) a = stepWorld(a);
+    for (let i = 0; i < 100; i++) {
+      a = stepWorld(a);
+    }
+
     expect(a).toEqual(stepWorld(createWorld("test"), 100));
   });
 
   test("actions do not mutate their input; effects remain local", () => {
-    const before = createWorld(),
-      copy = structuredClone(before);
+    const before = createWorld();
+    const copy = structuredClone(before);
 
     const after = addIngredient(before, "herbs", 30);
 
@@ -38,8 +46,12 @@ describe("simulation", () => {
     expect(after.cells[30].herbs).toBeGreaterThan(before.cells[30].herbs);
     expect(after.cells[0].herbs).toBe(before.cells[0].herbs);
     // SAFETY: deliberately bypasses the type to exercise the runtime guard.
-    expect(() => addIngredient(before, "unknown" as IngredientId, 30)).toThrow();
-    expect(() => addIngredient(before, "salt", 900)).toThrow();
+    expect(() => addIngredient(before, "unknown" as IngredientId, 30)).toThrow(
+      "Choose a pantry ingredient and a world patch.",
+    );
+    expect(() => addIngredient(before, "salt", 900)).toThrow(
+      "Choose a pantry ingredient and a world patch.",
+    );
   });
 
   test("all five discoverable combinations produce causal effects", () => {
@@ -64,10 +76,16 @@ describe("simulation", () => {
   test("water dilutes salt, restores a stressed grove, and cools a hot bowl", () => {
     let w = addIngredient(createWorld(), "herbs", 30);
 
-    for (let i = 0; i < 3; i++) w = addIngredient(w, "salt", 30);
+    for (let i = 0; i < 3; i++) {
+      w = addIngredient(w, "salt", 30);
+    }
+
     expect(stepWorld(w, 20).cells[30].herbs).toBeLessThan(w.cells[30].herbs);
 
-    for (let i = 0; i < 3; i++) w = addIngredient(w, "water", 30);
+    for (let i = 0; i < 3; i++) {
+      w = addIngredient(w, "water", 30);
+    }
+
     expect(stepWorld(w, 20).cells[30].herbs).toBeGreaterThan(w.cells[30].herbs);
     expect(w.salinity).toBeLessThan(30);
     expect(w.heat).toBeLessThan(26);
@@ -107,9 +125,11 @@ describe("storage", () => {
   test("corrupt, oversized, future, and out-of-range saves are rejected", () => {
     const w = createWorld();
 
-    expect(() => parseSave("{oops")).toThrow();
-    expect(() => parseSave("x".repeat(400001))).toThrow();
-    expect(() => parseSave("null")).toThrow();
+    expect(() => parseSave("{oops")).toThrow(SyntaxError);
+    expect(() => parseSave("x".repeat(400001))).toThrow(
+      "This world file is too large or unreadable.",
+    );
+    expect(() => parseSave("null")).toThrow(ZodError);
 
     const invalid = [
       { ...w, version: 99 },
@@ -123,11 +143,15 @@ describe("storage", () => {
       { ...w, events: [{ tick: 0, text: "x".repeat(181) }] },
     ];
 
-    for (const world of invalid)
-      expect(() => parseSave(JSON.stringify({ world, history: [] }))).toThrow();
+    for (const world of invalid) {
+      expect(() => parseSave(JSON.stringify({ world, history: [] }))).toThrow(ZodError);
+    }
+
     expect(() =>
-      parseSave(JSON.stringify({ world: w, history: Array(MAX_HISTORY + 1).fill(w) })),
-    ).toThrow();
+      parseSave(
+        JSON.stringify({ world: w, history: Array.from({ length: MAX_HISTORY + 1 }, () => w) }),
+      ),
+    ).toThrow(ZodError);
   });
 
   test("storage access and quota failures are recoverable", () => {
@@ -135,10 +159,10 @@ describe("storage", () => {
 
     const fail = {
       getItem(): string | null {
-        throw Error("denied");
+        throw new Error("denied");
       },
       setItem() {
-        throw Error("quota");
+        throw new Error("quota");
       },
     };
 

@@ -56,7 +56,10 @@ test("undo restores the exact prior world; reset and seed changes are undoable",
 test("history is capped", () => {
   const game = createGame(memoryStorage());
 
-  for (let i = 0; i < MAX_HISTORY + 5; i++) game.sprinkle();
+  for (let i = 0; i < MAX_HISTORY + 5; i++) {
+    game.sprinkle();
+  }
+
   expect(game.getState().history).toHaveLength(MAX_HISTORY);
 });
 
@@ -72,7 +75,7 @@ test("import keeps exported history and puts the previous bowl last", () => {
   expect(target.getState().world).toEqual(source.getState().world);
   expect(target.getState().history.at(-1)).toBe(previous);
   expect(target.getState().history).toHaveLength(2);
-  expect(() => target.importSave('{"hello":42}')).toThrow();
+  expect(() => target.importSave('{"hello":42}')).toThrow(/Invalid input/);
   expect(target.getState().world).toEqual(source.getState().world);
 });
 
@@ -107,7 +110,10 @@ test("ticks advance the world, persist every fifth tick, and notify subscribers"
   const listener = vi.fn();
   const unsubscribe = game.subscribe(listener);
 
-  for (let i = 0; i < 4; i++) game.tick();
+  for (let i = 0; i < 4; i++) {
+    game.tick();
+  }
+
   expect(storage.map.has(SAVE_KEY)).toBe(false);
   game.tick();
   expect(game.getState().world.tick).toBe(5);

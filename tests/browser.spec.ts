@@ -1,9 +1,8 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { createWorld, type IngredientId } from "../src/simulation.ts";
 import { parseSave } from "../src/storage.ts";
-import AxeBuilder from "@axe-core/playwright";
-import { mkdir, writeFile } from "node:fs/promises";
+import { AxeBuilder } from "@axe-core/playwright";
 
 const pause = async (page: Page) => {
   await page.locator("#pause").click();
@@ -24,7 +23,9 @@ declare global {
 const box = async (locator: Locator) => {
   const bounds = await locator.boundingBox();
 
-  if (!bounds) throw new Error("Element is not visible.");
+  if (!bounds) {
+    throw new Error("Element is not visible.");
+  }
 
   return bounds;
 };
@@ -32,13 +33,14 @@ const box = async (locator: Locator) => {
 const snapshot = (page: Page) => page.evaluate(() => window.spoonworld.snapshot());
 
 test("desktop boots without errors or third-party requests; screenshot", async ({ page }) => {
-  const errors: string[] = [],
-    external: string[] = [];
+  const errors: string[] = [];
+  const external: string[] = [];
 
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("request", (r) => {
-    if (!r.url().startsWith("http://127.0.0.1:4188") && !r.url().startsWith("blob:"))
+    if (!r.url().startsWith("http://127.0.0.1:4188") && !r.url().startsWith("blob:")) {
       external.push(r.url());
+    }
   });
   const response = await page.goto("/");
   const headers = response?.headers() ?? {};
@@ -79,8 +81,12 @@ test("all five goals work through the UI; illustrated guide screenshot", async (
     "sugar",
     "lemon",
     "soda",
-  ] satisfies IngredientId[])
+  ] satisfies IngredientId[]) {
+    // Sequential browser actions share this page and must finish in order.
+    // eslint-disable-next-line no-await-in-loop
     await add(page, id);
+  }
+
   const w = await snapshot(page);
   expect(w.discovered).toHaveLength(5);
   expect(w.fizz).toBeGreaterThan(10);
@@ -146,8 +152,8 @@ test("export/import preserves world; invalid file leaves bowl untouched", async 
   await pause(page);
   await add(page, "herbs");
 
-  const before = await snapshot(page),
-    downloadPromise = page.waitForEvent("download");
+  const before = await snapshot(page);
+  const downloadPromise = page.waitForEvent("download");
 
   await page.locator("#export").click();
   const download = await downloadPromise;
@@ -181,6 +187,8 @@ test("corrupt saved data recovers to a usable new bowl", async ({ page }) => {
 
 test("storage quota failure offers export and retry, retry recovers", async ({ page }) => {
   await page.addInitScript(() => {
+    // The original method is restored to its prototype, never called without a receiver.
+    // eslint-disable-next-line typescript/unbound-method
     const original = Storage.prototype.setItem;
     Storage.prototype.setItem = function () {
       throw new DOMException("Quota exceeded", "QuotaExceededError");
@@ -264,7 +272,12 @@ test("keyboard and reduced motion work; resources remain bounded", async ({ page
     target: 29,
   });
 
-  for (let i = 0; i < 25; i++) await page.locator("#sprinkle").click();
+  for (let i = 0; i < 25; i++) {
+    // Sequential browser actions share this page and must finish in order.
+    // eslint-disable-next-line no-await-in-loop
+    await page.locator("#sprinkle").click();
+  }
+
   const debug = await page.evaluate(() => window.spoonworld.debug());
   expect(debug.history).toBe(12);
   expect(debug.particles).toBe(0);
@@ -278,11 +291,14 @@ test("keyboard and reduced motion work; resources remain bounded", async ({ page
 test("desktop, guide, and mobile have no serious accessibility violations", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("canvas")).toBeVisible();
-  const reports = [];
-  reports.push({
-    surface: "desktop",
-    ...(await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()),
-  });
+
+  const reports = [
+    {
+      surface: "desktop",
+      ...(await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()),
+    },
+  ];
+
   await page.locator(".guide-button").first().click();
   reports.push({
     surface: "guide",
@@ -320,7 +336,9 @@ test("desktop, guide, and mobile have no serious accessibility violations", asyn
     ),
   );
 
-  for (const report of reports) expect(report.violations, report.surface).toEqual([]);
+  for (const report of reports) {
+    expect(report.violations, report.surface).toEqual([]);
+  }
 });
 
 test("small phone and tablet layouts preserve usable controls", async ({ page }) => {
@@ -328,11 +346,19 @@ test("small phone and tablet layouts preserve usable controls", async ({ page })
   await pause(page);
 
   for (const width of [320, 768, 1024]) {
+    // Sequential browser actions share this page and must finish in order.
+    // eslint-disable-next-line no-await-in-loop
     await page.setViewportSize({ width, height: 900 });
+    // Sequential browser actions share this page and must finish in order.
+    // eslint-disable-next-line no-await-in-loop
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
+    // Sequential browser actions share this page and must finish in order.
+    // eslint-disable-next-line no-await-in-loop
     await page.locator("#sprinkle").click();
+    // Sequential browser actions share this page and must finish in order.
+    // eslint-disable-next-line no-await-in-loop
     await expect(page.locator("#sprinkle")).toBeVisible();
   }
 

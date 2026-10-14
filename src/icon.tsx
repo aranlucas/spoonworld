@@ -74,7 +74,12 @@ const PATHS: Record<IconName, ReactNode> = {
   close: <path d="m5 5 14 14M19 5 5 19" />,
 };
 
-export function Icon({ name, className = "" }: { name: IconName; className?: string }) {
+interface IconProps {
+  name: IconName;
+  className?: string;
+}
+
+export function Icon({ name, className = "" }: IconProps) {
   return (
     <svg
       className={`icon ${className}`}

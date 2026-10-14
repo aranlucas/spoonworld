@@ -29,9 +29,9 @@ test("resident notes follow current modes immediately, including exhausted fizz"
 });
 
 test("patch notes explain the actual growth thresholds without mutating a save", () => {
-  const w = createWorld(),
-    c = w.cells[30],
-    before = structuredClone(w);
+  const w = createWorld();
+  const c = w.cells[30];
+  const before = structuredClone(w);
 
   expect(patchObservation(w, c)).toMatch(/Roots are growing/);
   expect(w).toEqual(before);
