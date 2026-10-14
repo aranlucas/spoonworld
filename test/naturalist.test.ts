@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { createWorld, addIngredient, stepWorld, residentMode } from "../src/simulation.ts";
-import { residentName, residentObservation, patchObservation } from "../src/naturalist.ts";
+import { createWorld, addIngredient, stepWorld, residentMode } from "@/simulation.ts";
+import { residentName, residentObservation, patchObservation } from "@/naturalist.ts";
 
 test("resident notes follow current modes immediately, including exhausted fizz", () => {
   let w = createWorld("notebook");

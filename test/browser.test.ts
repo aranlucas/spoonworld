@@ -1,7 +1,7 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
-import { createWorld, type IngredientId } from "../src/simulation.ts";
-import { parseSave } from "../src/storage.ts";
+import { createWorld, type IngredientId } from "@/simulation.ts";
+import { parseSave } from "@/storage.ts";
 import { AxeBuilder } from "@axe-core/playwright";
 
 const pause = async (page: Page) => {

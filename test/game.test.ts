@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
-import { createGame, CENTER_PATCH } from "../src/game.ts";
-import { createWorld, MAX_HISTORY } from "../src/simulation.ts";
-import { SAVE_KEY, serializeSave } from "../src/storage.ts";
+import { createGame, CENTER_PATCH } from "@/game.ts";
+import { createWorld, MAX_HISTORY } from "@/simulation.ts";
+import { SAVE_KEY, serializeSave } from "@/storage.ts";
 
 function memoryStorage() {
   const map = new Map<string, string>();
