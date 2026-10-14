@@ -1,5 +1,5 @@
 import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
-import { Icon } from "../Icon.tsx";
+import { Icon } from "../icon.tsx";
 
 interface DialogProps {
   open: boolean;
@@ -22,15 +22,24 @@ export function Dialog(props: DialogProps) {
   useEffect(() => {
     const dialog = ref.current;
 
-    if (!dialog) return;
+    if (!dialog) {
+      return;
+    }
 
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+    }
 
-    if (!open && dialog.open) dialog.close();
+    if (!open && dialog.open) {
+      dialog.close();
+    }
   }, [open]);
 
   const closeOnBackdrop = (event: MouseEvent<HTMLDialogElement>) => {
-    if (event.target !== event.currentTarget) return;
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
     const r = event.currentTarget.getBoundingClientRect();
 
     if (
@@ -38,15 +47,32 @@ export function Dialog(props: DialogProps) {
       event.clientX > r.right ||
       event.clientY < r.top ||
       event.clientY > r.bottom
-    )
+    ) {
       onClose();
+    }
   };
 
   return (
-    <dialog ref={ref} id={id} aria-labelledby={titleId} onClose={onClose} onClick={closeOnBackdrop}>
+    <dialog
+      ref={ref}
+      id={id}
+      aria-labelledby={titleId}
+      onClose={onClose}
+      onClick={closeOnBackdrop}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          onClose();
+        }
+      }}
+    >
       <div className="dialog-top">
         <span className="eyebrow">{eyebrow}</span>
-        <button className="icon-button dialog-close" aria-label={closeLabel} onClick={onClose}>
+        <button
+          type="button"
+          className="icon-button dialog-close"
+          aria-label={closeLabel}
+          onClick={onClose}
+        >
           <Icon name="close" />
         </button>
       </div>

@@ -30,21 +30,21 @@ export interface GameState {
 }
 
 export interface Game {
-  getState(): GameState;
-  subscribe(listener: () => void): () => void;
+  getState: () => GameState;
+  subscribe: (listener: () => void) => () => void;
   loadStatus: LoadResult["status"];
-  selectIngredient(id: IngredientId): void;
-  setTarget(id: number): void;
+  selectIngredient: (id: IngredientId) => void;
+  setTarget: (id: number) => void;
   /** Adds the selected ingredient. Returns a newly found field note, if any. */
-  sprinkle(cellId?: number): GuideEntry | undefined;
-  undo(): boolean;
-  reset(): void;
-  changeSeed(seed: string): void;
-  importSave(raw: string): void;
-  exportSave(): string;
-  togglePause(): boolean;
-  tick(): void;
-  persist(): boolean;
+  sprinkle: (cellId?: number) => GuideEntry | undefined;
+  undo: () => boolean;
+  reset: () => void;
+  changeSeed: (seed: string) => void;
+  importSave: (raw: string) => void;
+  exportSave: () => string;
+  togglePause: () => boolean;
+  tick: () => void;
+  persist: () => boolean;
 }
 
 // Owns the world, its undo history, and persistence. The UI and renderer read
@@ -66,7 +66,9 @@ export function createGame(storage: SaveStorage | null): Game {
   const update = (patch: Partial<GameState>) => {
     state = { ...state, ...patch };
 
-    for (const listener of listeners) listener();
+    for (const listener of listeners) {
+      listener();
+    }
   };
 
   const withHistory = () => [...state.history, state.world].slice(-MAX_HISTORY);
@@ -74,7 +76,9 @@ export function createGame(storage: SaveStorage | null): Game {
   const persist = () => {
     const saving = saveWorld(storage, state.world, state.history);
 
-    if (saving !== state.saving) update({ saving });
+    if (saving !== state.saving) {
+      update({ saving });
+    }
 
     return saving;
   };
@@ -109,7 +113,10 @@ export function createGame(storage: SaveStorage | null): Game {
     undo() {
       const world = state.history.at(-1);
 
-      if (!world) return false;
+      if (!world) {
+        return false;
+      }
+
       update({ world, history: state.history.slice(0, -1) });
       persist();
 
@@ -118,7 +125,10 @@ export function createGame(storage: SaveStorage | null): Game {
     reset: () => replaceWorld(createWorld(state.world.seed)),
     changeSeed: (seed) => replaceWorld(createWorld(seed)),
     importSave(raw) {
-      if (raw.length > MAX_SAVE_BYTES) throw new Error("This world file is too large.");
+      if (raw.length > MAX_SAVE_BYTES) {
+        throw new Error("This world file is too large.");
+      }
+
       const imported = parseSave(raw);
 
       replaceWorld(imported.world, [...imported.history, state.world].slice(-MAX_HISTORY));
@@ -132,7 +142,9 @@ export function createGame(storage: SaveStorage | null): Game {
     tick() {
       update({ world: stepWorld(state.world) });
 
-      if (state.world.tick % 5 === 0) persist();
+      if (state.world.tick % 5 === 0) {
+        persist();
+      }
     },
     persist,
   };

@@ -25,34 +25,43 @@ export const patchName = (cell: Cell): string =>
 export function residentObservation(world: World, resident: Resident): string {
   const mode = residentMode(world, resident);
 
-  if (mode === "flying")
+  if (mode === "flying") {
     return "Riding a bubble ferry: lemon and soda made enough fizz for a lift.";
+  }
 
-  if (mode === "sailing")
+  if (mode === "sailing") {
     return "Sailing a shell boat: this sproutling takes to the sea when brine reaches 30%.";
+  }
 
-  if (mode === "nesting")
+  if (mode === "nesting") {
     return "Nesting among the herbs: this patch has more than 45% leafy cover.";
+  }
 
   return "Wandering between meadows, looking for leafy, moist ground with less salt.";
 }
 
 export function patchObservation(world: World, cell: Cell): string {
-  if (!cell.land)
+  if (!cell.land) {
     return world.salinity >= 30
       ? "The bowl’s briny sea welcomes kelp and shell boats. Water dilutes the brine."
       : "A quiet sea patch. A little more sea salt can welcome kelp and shell boats.";
+  }
 
-  if (cell.herbs <= 3) return "Bare ground needs a pinch of herbs before roots can grow.";
+  if (cell.herbs <= 3) {
+    return "Bare ground needs a pinch of herbs before roots can grow.";
+  }
 
-  if (cell.salt >= 65)
+  if (cell.salt >= 65) {
     return "Roots are wilting: local salt is at least 65%. Water rinses salt from this patch and its neighbours.";
+  }
 
-  if (cell.moisture <= 25)
+  if (cell.moisture <= 25) {
     return "Roots are thirsty: moisture is at most 25%. Water or kitchen rain helps them grow again.";
+  }
 
-  if (cell.herbs > 35 && cell.sugar > 15)
+  if (cell.herbs > 35 && cell.sugar > 15) {
     return "Moist, sweet herbs are growing flowers for glowbugs. Sugar slowly fades, so enjoy the lights.";
+  }
 
   return "Roots are growing: moisture is above 25% and local salt is below 65%. Sweet herbs can grow flowers.";
 }

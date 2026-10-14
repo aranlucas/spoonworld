@@ -1,8 +1,8 @@
 import { INGREDIENTS, type Ingredient, type IngredientId, type World } from "../simulation.ts";
 import { patchName, patchObservation, residentName } from "../naturalist.ts";
-import { Icon } from "../Icon.tsx";
-import { Dialog } from "./Dialog.tsx";
-import { pinchLabel } from "./Pantry.tsx";
+import { Icon } from "../icon.tsx";
+import { Dialog } from "./dialog.tsx";
+import { pinchLabel } from "../pantry-label.ts";
 
 const METERS = [
   ["Herbs", "herbs"],
@@ -30,13 +30,17 @@ interface PatchDialogProps {
 function chemistryNote(world: World, target: number): string {
   const cell = world.cells[target];
 
-  if (cell.acid >= 4)
+  if (cell.acid >= 4) {
     return "A little acidity is waiting here. Try baking soda on this same patch.";
+  }
 
-  if (cell.soda >= 4) return "Baking soda is waiting here. Try lemon on this same patch.";
+  if (cell.soda >= 4) {
+    return "Baking soda is waiting here. Try lemon on this same patch.";
+  }
 
-  if (world.fizz > 10)
+  if (world.fizz > 10) {
     return "The bowl is fizzing. Sproutlings can ride the bubbles until the fizz fades.";
+  }
 
   return "Lemon and baking soda react when they meet on a patch or its neighbours.";
 }
@@ -99,7 +103,9 @@ export function PatchDialog(props: PatchDialogProps) {
         onChange={(event) => {
           const item = INGREDIENTS.find((i) => i.id === event.target.value);
 
-          if (item) props.onIngredient(item.id);
+          if (item) {
+            props.onIngredient(item.id);
+          }
         }}
       >
         {INGREDIENTS.map((i) => (
@@ -109,10 +115,21 @@ export function PatchDialog(props: PatchDialogProps) {
         ))}
       </select>
       <div className="patch-actions">
-        <button id="patch-sprinkle" className="sprinkle-button" onClick={props.onSprinkle}>
+        <button
+          type="button"
+          id="patch-sprinkle"
+          className="sprinkle-button"
+          onClick={props.onSprinkle}
+        >
           {pinchLabel(ingredient)}
         </button>
-        <button id="patch-undo" className="tool-button" disabled={!canUndo} onClick={props.onUndo}>
+        <button
+          type="button"
+          id="patch-undo"
+          className="tool-button"
+          disabled={!canUndo}
+          onClick={props.onUndo}
+        >
           <Icon name="undo" /> Undo
         </button>
       </div>

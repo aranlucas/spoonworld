@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import {
   hexDistance,
   residentMode,
@@ -21,6 +21,17 @@ interface Particle {
   size: number;
   color: string;
   life: number;
+}
+
+interface PointerStart {
+  id: number;
+  x: number;
+  y: number;
+}
+
+interface Drawable {
+  y: number;
+  draw: () => void;
 }
 
 interface Hover {
@@ -71,7 +82,15 @@ const ellipse = (
 
 function path(ctx: Ctx, points: Point[], fill: Paint, stroke?: string) {
   ctx.beginPath();
-  points.forEach((p, i) => (i ? ctx.lineTo(...p) : ctx.moveTo(...p)));
+
+  for (const [index, point] of points.entries()) {
+    if (index === 0) {
+      ctx.moveTo(...point);
+    } else {
+      ctx.lineTo(...point);
+    }
+  }
+
   ctx.closePath();
 
   if (fill) {
@@ -87,7 +106,15 @@ function path(ctx: Ctx, points: Point[], fill: Paint, stroke?: string) {
 
 function line(ctx: Ctx, points: Point[], color: string, width = 2) {
   ctx.beginPath();
-  points.forEach((p, i) => (i ? ctx.lineTo(...p) : ctx.moveTo(...p)));
+
+  for (const [index, point] of points.entries()) {
+    if (index === 0) {
+      ctx.moveTo(...point);
+    } else {
+      ctx.lineTo(...point);
+    }
+  }
+
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
   ctx.stroke();
@@ -247,11 +274,11 @@ function cloud(ctx: Ctx, x: number, y: number, scale: number, alpha: number) {
 export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): WorldRenderer {
   const { getWorld, onTap } = callbacks;
 
-  let selected = 30,
-    hovered: Hover | null = null,
-    phase = 0,
-    frames = 0,
-    reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let selected = 30;
+  let hovered: Hover | null = null;
+  let phase = 0;
+  let frames = 0;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const particles: Particle[] = [];
 
@@ -273,7 +300,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
         };
       };
 
-      let start: { id: number; x: number; y: number } | null = null;
+      let start: PointerStart | null = null;
       canvas.addEventListener("pointermove", (event) => {
         const p = position(event);
         hovered = getWorld()
@@ -281,28 +308,36 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
             c,
             d: Math.hypot(project(c).x - p.x, (project(c).y - p.y) * 1.4),
           }))
-          .sort((a, b) => a.d - b.d)[0];
+          .toSorted((a, b) => a.d - b.d)[0];
 
-        if (hovered && hovered.d > 47) hovered = null;
+        if (hovered && hovered.d > 47) {
+          hovered = null;
+        }
       });
       canvas.addEventListener("pointerleave", () => {
         hovered = null;
       });
       canvas.addEventListener("pointerdown", (event) => {
-        if (event.isPrimary && event.button === 0)
+        if (event.isPrimary && event.button === 0) {
           start = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        }
       });
       canvas.addEventListener("pointercancel", () => {
         start = null;
       });
       canvas.addEventListener("pointerup", (event) => {
-        if (!start || start.id !== event.pointerId) return;
+        if (!start || start.id !== event.pointerId) {
+          return;
+        }
 
         const moved = Math.hypot(start.x - event.clientX, start.y - event.clientY);
 
         start = null;
 
-        if (moved > 12) return;
+        if (moved > 12) {
+          return;
+        }
+
         const pointer = position(event);
 
         const closest = getWorld()
@@ -310,7 +345,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
             c,
             d: Math.hypot(project(c).x - pointer.x, (project(c).y - pointer.y) * 1.4),
           }))
-          .sort((a, b) => a.d - b.d)[0];
+          .toSorted((a, b) => a.d - b.d)[0];
 
         if (closest && closest.d < 47) {
           selected = closest.c.id;
@@ -321,7 +356,10 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
     update(_time: number, delta: number) {
       const context = this.bowl?.context;
 
-      if (!context) return;
+      if (!context) {
+        return;
+      }
+
       frames = (frames + 1) % 1000000000;
       phase += reduced ? 0 : Math.min(delta, 80) / 1000;
       draw(context, getWorld(), phase);
@@ -420,8 +458,8 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
     for (let i = 0; i < 17; i++) {
       const a = 0.3 + (i * (Math.PI - 0.6)) / 16;
 
-      const x = 480 + 266 * Math.cos(a),
-        y = 364 + 164 * Math.sin(a);
+      const x = 480 + 266 * Math.cos(a);
+      const y = 364 + 164 * Math.sin(a);
 
       ctx.save();
       ctx.translate(x, y);
@@ -452,8 +490,8 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
     ctx.clip();
 
     for (let i = 0; i < 16; i++) {
-      const x = 245 + ((i * 89) % 470) + Math.sin(t * 0.4 + i) * 6,
-        y = 230 + ((i * 41) % 200);
+      const x = 245 + ((i * 89) % 470) + Math.sin(t * 0.4 + i) * 6;
+      const y = 230 + ((i * 41) % 200);
 
       ctx.beginPath();
       ctx.moveTo(x - 10, y);
@@ -463,12 +501,12 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       ctx.stroke();
     }
 
-    if (w.salinity >= 30)
+    if (w.salinity >= 30) {
       for (let i = 0; i < 12; i++) {
         const a = (i * Math.PI) / 6;
 
-        const x = 480 + 225 * Math.cos(a),
-          y = 326 + 115 * Math.sin(a);
+        const x = 480 + 225 * Math.cos(a);
+        const y = 326 + 115 * Math.sin(a);
 
         line(
           ctx,
@@ -481,21 +519,23 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
           2,
         );
       }
+    }
 
     ctx.restore();
 
-    const cells = [...w.cells].sort((a, b) => project(a).y - project(b).y || a.q - b.q);
+    const cells = w.cells.toSorted((a, b) => project(a).y - project(b).y || a.q - b.q);
 
-    for (const c of cells.filter((c) => c.land)) {
-      const { x, y } = project(c),
-        points: Point[] = [
-          [x - 24, y - 14],
-          [x, y - 25],
-          [x + 24, y - 14],
-          [x + 24, y + 14],
-          [x, y + 25],
-          [x - 24, y + 14],
-        ];
+    for (const c of cells.filter((cell) => cell.land)) {
+      const { x, y } = project(c);
+
+      const points: Point[] = [
+        [x - 24, y - 14],
+        [x, y - 25],
+        [x + 24, y - 14],
+        [x + 24, y + 14],
+        [x, y + 25],
+        [x - 24, y + 14],
+      ];
 
       const shore = w.cells.some((n) => !n.land && hexDistance(n, c) <= 1);
 
@@ -521,8 +561,8 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
 
       // Tiny strokes make ground readable without a grid overlay.
       for (let j = 0; j < 3; j++) {
-        const xx = x - 13 + j * 11,
-          yy = y + 6 + (j % 2) * 5;
+        const xx = x - 13 + j * 11;
+        const yy = y + 6 + (j % 2) * 5;
 
         line(
           ctx,
@@ -541,9 +581,13 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
         ellipse(ctx, x - 9, y - 7, 1.8, 1.8, "#f4db94");
       }
 
-      if (c.acid > 12) ellipse(ctx, x + 8, y + 9, 4, 2, "#d5be4a");
+      if (c.acid > 12) {
+        ellipse(ctx, x + 8, y + 9, 4, 2, "#d5be4a");
+      }
 
-      if (c.soda > 12) ellipse(ctx, x - 8, y + 10, 4, 2, "#e8e4d5");
+      if (c.soda > 12) {
+        ellipse(ctx, x - 8, y + 10, 4, 2, "#e8e4d5");
+      }
     }
 
     const chosen = w.cells[hovered?.c.id ?? selected];
@@ -558,18 +602,18 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
     }
 
     // Trees and residents are sorted together for predictable depth.
-    const objects: { y: number; draw: () => void }[] = [];
+    const objects: Drawable[] = [];
 
-    for (const c of cells.filter((c) => c.land)) {
+    for (const c of cells.filter((cell) => cell.land)) {
       const p = project(c);
 
-      if (c.herbs > 40)
+      if (c.herbs > 40) {
         objects.push({
           y: p.y,
           draw: () =>
             tree(ctx, p.x + (c.variant - 1) * 4, p.y, Math.min(1.3, c.herbs / 60), c.variant),
         });
-      else if (c.herbs > 25)
+      } else if (c.herbs > 25) {
         objects.push({
           y: p.y,
           draw: () => {
@@ -586,11 +630,12 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
             ellipse(ctx, p.x + 4, p.y - 11, 5, 3, "#83a34f");
           },
         });
+      }
 
-      if (c.flowers > 3)
+      if (c.flowers > 3) {
         for (let j = 0; j < Math.min(4, Math.ceil(c.flowers / 12)); j++) {
-          const x = p.x - 14 + j * 8,
-            y = p.y + 11;
+          const x = p.x - 14 + j * 8;
+          const y = p.y + 11;
 
           line(
             ctx,
@@ -604,9 +649,10 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
           ellipse(ctx, x, y - 8, 3, 3, j % 2 ? "#ecb680" : "#f4deac");
           ellipse(ctx, x + Math.sin(t + j) * 7, y - 19 - Math.cos(t + j) * 3, 2, 2, "#ffe2a5");
         }
+      }
     }
 
-    w.residents.forEach((r) => {
+    for (const r of w.residents) {
       const p = project(w.cells[r.cell]);
       const mode = residentMode(w, r);
       const a = r.id * 0.5236 + t * 0.06;
@@ -624,20 +670,26 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
         y: y + (mode === "flying" ? 100 : 0),
         draw: () => sprout(ctx, x, y, r.id, t, mode),
       });
-    });
-    objects.sort((a, b) => a.y - b.y).forEach((o) => o.draw());
+    }
+
+    for (const object of objects.toSorted((a, b) => a.y - b.y)) {
+      object.draw();
+    }
+
     // Three clouds and a sun: a strict fixed weather budget.
     ellipse(ctx, 677, 151, 22, 22, "#e7c479");
     ellipse(ctx, 671, 146, 18, 18, "#efd49b");
     cloud(ctx, 310 + Math.sin(t * 0.1) * 11, 137, 0.8, 0.9);
     cloud(ctx, 661 + Math.sin(t * 0.08) * 13, 207, 0.65, 0.95);
 
-    if (w.heat > 40) cloud(ctx, 456 + Math.sin(t * 0.15) * 20, 111, 1.05, 0.88);
+    if (w.heat > 40) {
+      cloud(ctx, 456 + Math.sin(t * 0.15) * 20, 111, 1.05, 0.88);
+    }
 
     if (w.heat >= 42 && w.humidity >= 58) {
       for (let i = 0; i < 26; i++) {
-        const x = 280 + ((i * 73) % 390),
-          y = 181 + ((i * 49 + t * 55) % 215);
+        const x = 280 + ((i * 73) % 390);
+        const y = 181 + ((i * 49 + t * 55) % 215);
 
         line(
           ctx,
@@ -651,13 +703,14 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       }
     }
 
-    if (w.fizz > 10)
+    if (w.fizz > 10) {
       for (let i = 0; i < 8; i++) {
-        const x = 340 + ((i * 57) % 280),
-          y = 230 - ((t * 19 + i * 24) % 90);
+        const x = 340 + ((i * 57) % 280);
+        const y = 230 - ((t * 19 + i * 24) % 90);
 
         ellipse(ctx, x, y, 4 + (i % 4), 6 + (i % 5), "#f2ffec20", "#edf9db77");
       }
+    }
 
     ctx.fillStyle = "#6a7356";
     ctx.font = "italic 17px Georgia";
@@ -667,10 +720,13 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
 
   return {
     sprinkle(cellId, color) {
-      if (reduced) return;
+      if (reduced) {
+        return;
+      }
+
       const p = project(getWorld().cells[cellId]);
 
-      for (let i = 0; i < 16; i++)
+      for (let i = 0; i < 16; i++) {
         particles.push({
           x: p.x + ((i % 4) - 2) * 4,
           y: p.y - 45 - i * 2,
@@ -680,15 +736,21 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
           color,
           life: 0.65,
         });
+      }
 
-      if (particles.length > 48) particles.splice(0, particles.length - 48);
+      if (particles.length > 48) {
+        particles.splice(0, particles.length - 48);
+      }
     },
     setTarget(id) {
       selected = id;
     },
     pause(value) {
-      if (value) game.loop.sleep();
-      else game.loop.wake();
+      if (value) {
+        game.loop.sleep();
+      } else {
+        game.loop.wake();
+      }
     },
     debug() {
       return {

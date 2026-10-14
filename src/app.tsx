@@ -4,18 +4,24 @@ import { describeWorld, weather, INGREDIENTS, type World } from "./simulation.ts
 import type { Game } from "./game.ts";
 import type { Sound } from "./audio.ts";
 import type { WorldCallbacks, WorldRenderer } from "./renderer.ts";
-import { Icon } from "./Icon.tsx";
-import { WorldView } from "./components/WorldView.tsx";
-import { Pantry } from "./components/Pantry.tsx";
-import { GuideDialog } from "./components/GuideDialog.tsx";
-import { SeedDialog } from "./components/SeedDialog.tsx";
-import { PatchDialog } from "./components/PatchDialog.tsx";
+import { Icon } from "./icon.tsx";
+import { WorldView } from "./components/world-view.tsx";
+import { Pantry } from "./components/pantry.tsx";
+import { GuideDialog } from "./components/guide-dialog.tsx";
+import { SeedDialog } from "./components/seed-dialog.tsx";
+import { PatchDialog } from "./components/patch-dialog.tsx";
+
+type Direction = readonly [number, number];
+
+interface Toast {
+  text: string;
+}
 
 type OpenDialog = "guide" | "seed" | "patch" | null;
 
 const PERIODS = ["morning", "afternoon", "evening", "night"];
 
-const ARROWS = new Map<string, readonly [number, number]>([
+const ARROWS = new Map<string, Direction>([
   ["ArrowLeft", [-1, 0]],
   ["ArrowRight", [1, 0]],
   ["ArrowUp", [0, -1]],
@@ -39,15 +45,30 @@ export function App(props: AppProps) {
   const { world, history, target, paused, saving } = state;
   const ingredient = INGREDIENTS.find((i) => i.id === state.ingredient) ?? INGREDIENTS[0];
   const [dialog, setDialog] = useState<OpenDialog>(null);
-  const [toast, setToast] = useState<{ text: string } | null>(null);
-  const [announcement, setAnnouncement] = useState("");
+
+  const [toast, setToast] = useState<Toast | null>(() =>
+    game.loadStatus === "invalid"
+      ? {
+          text: "The previous save could not be read. A fresh bowl is ready; you can import a backup.",
+        }
+      : null,
+  );
+
+  const [announcement, setAnnouncement] = useState(() =>
+    game.loadStatus === "invalid"
+      ? "The previous save could not be read. A fresh bowl is ready; you can import a backup."
+      : "",
+  );
+
   const [soundOn, setSoundOn] = useState(false);
   const [offline, setOffline] = useState("Local & private");
   const renderer = useRef<WorldRenderer | null>(null);
   const importFile = useRef<HTMLInputElement>(null);
   const dialogOpen = useRef(false);
 
-  dialogOpen.current = dialog !== null;
+  useEffect(() => {
+    dialogOpen.current = dialog !== null;
+  }, [dialog]);
 
   const notify = useCallback((text: string) => {
     // A fresh object restarts the timer even when the text repeats.
@@ -56,10 +77,13 @@ export function App(props: AppProps) {
   }, []);
 
   useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), 4500);
+    const timer = toast ? setTimeout(() => setToast(null), 4500) : undefined;
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (timer !== undefined) {
+        clearTimeout(timer);
+      }
+    };
   }, [toast]);
 
   const sprinkle = useCallback(
@@ -71,14 +95,19 @@ export function App(props: AppProps) {
       renderer.current?.sprinkle(patch, INGREDIENTS[index].color);
       sound.play(index);
 
-      if (found) notify(`New field note: ${found.title}.`);
-      else setAnnouncement(next.events[0].text);
+      if (found) {
+        notify(`New field note: ${found.title}.`);
+      } else {
+        setAnnouncement(next.events[0].text);
+      }
     },
     [game, sound, notify],
   );
 
   const undo = useCallback(() => {
-    if (game.undo()) notify("One little step back. Your previous world is restored.");
+    if (game.undo()) {
+      notify("One little step back. Your previous world is restored.");
+    }
   }, [game, notify]);
 
   const togglePause = useCallback(() => {
@@ -111,30 +140,34 @@ export function App(props: AppProps) {
 
   // Fixed one-second ecology clock. Hidden tabs and open dialogs hold the world.
   useEffect(() => {
-    let last = performance.now(),
-      accumulator = 0,
-      frame = requestAnimationFrame(function clock(now) {
-        const elapsed = Math.min(250, now - last);
+    let last = performance.now();
+    let accumulator = 0;
 
-        last = now;
+    let frame = requestAnimationFrame(function clock(now) {
+      const elapsed = Math.min(250, now - last);
 
-        if (!game.getState().paused && !document.hidden && !dialogOpen.current)
-          accumulator += elapsed;
+      last = now;
 
-        if (accumulator >= 1000) {
-          accumulator -= 1000;
-          game.tick();
-        }
+      if (!game.getState().paused && !document.hidden && !dialogOpen.current) {
+        accumulator += elapsed;
+      }
 
-        frame = requestAnimationFrame(clock);
-      });
+      if (accumulator >= 1000) {
+        accumulator -= 1000;
+        game.tick();
+      }
+
+      frame = requestAnimationFrame(clock);
+    });
 
     const onVisibility = () => {
       last = performance.now();
       accumulator = 0;
       renderer.current?.pause(document.hidden);
 
-      if (document.hidden) game.persist();
+      if (document.hidden) {
+        game.persist();
+      }
     };
 
     const onPageHide = () => game.persist();
@@ -160,19 +193,26 @@ export function App(props: AppProps) {
         e.ctrlKey ||
         e.metaKey ||
         e.altKey
-      )
+      ) {
         return;
+      }
 
-      if (/^[1-7]$/.test(e.key)) game.selectIngredient(INGREDIENTS[Number(e.key) - 1].id);
+      if (/^[1-7]$/.test(e.key)) {
+        game.selectIngredient(INGREDIENTS[Number(e.key) - 1].id);
+      }
 
       if (e.code === "Space" && !["BUTTON", "SUMMARY"].includes(element?.tagName ?? "")) {
         e.preventDefault();
         togglePause();
       }
 
-      if (e.key.toLowerCase() === "z") undo();
+      if (e.key.toLowerCase() === "z") {
+        undo();
+      }
 
-      if (element?.id !== "world-view") return;
+      if (element?.id !== "world-view") {
+        return;
+      }
 
       if (e.key === "Enter") {
         e.preventDefault();
@@ -202,18 +242,14 @@ export function App(props: AppProps) {
   useEffect(() => {
     game.persist();
 
-    if (game.loadStatus === "invalid")
-      notify(
-        "The previous save could not be read. A fresh bowl is ready; you can import a backup.",
-      );
-
-    if (import.meta.env.PROD && "serviceWorker" in navigator)
+    if (import.meta.env.PROD && "serviceWorker" in navigator) {
       registerSW({
         immediate: true,
         onRegisteredSW: () =>
           void navigator.serviceWorker.ready.then(() => setOffline("Offline ready")),
         onRegisterError: () => setOffline("Offline cache unavailable"),
       });
+    }
   }, [game, notify]);
 
   // Read-only diagnostics for tests and resource inspection. No external calls.
@@ -242,7 +278,9 @@ export function App(props: AppProps) {
 
       setSoundOn(enabled);
 
-      if (enabled) sound.play(0);
+      if (enabled) {
+        sound.play(0);
+      }
     } catch {
       notify("Sound is unavailable in this browser. The bowl is still playable.");
     }
@@ -253,7 +291,7 @@ export function App(props: AppProps) {
     const a = document.createElement("a");
 
     a.href = url;
-    a.download = `spoonworld-${world.seed.replace(/[^a-z0-9-]/gi, "-")}.json`;
+    a.download = `spoonworld-${world.seed.replaceAll(/[^a-z0-9-]/gi, "-")}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     notify("World exported, field notes and undo history included.");
@@ -262,7 +300,9 @@ export function App(props: AppProps) {
   const importWorld = async (input: HTMLInputElement) => {
     const file = input.files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     try {
       game.importSave(await file.text());
@@ -294,7 +334,7 @@ export function App(props: AppProps) {
           Spoonworld
         </a>
         <span className="edition">SMALL WORLDS / BIG POSSIBILITIES</span>
-        <button className="text-button guide-button" onClick={openGuide}>
+        <button type="button" className="text-button guide-button" onClick={openGuide}>
           <Icon name="book" /> Field guide{" "}
           <span className="guide-count">{world.discovered.length}/5</span>
         </button>
@@ -332,13 +372,14 @@ export function App(props: AppProps) {
                   : `sprinkle ${ingredient.name.toLowerCase()}`}
                 .
               </span>
-              <button id="inspect" className="patch-link" onClick={() => openPatch()}>
+              <button type="button" id="inspect" className="patch-link" onClick={() => openPatch()}>
                 Read this patch <span aria-hidden="true">↗</span>
               </button>
             </div>
             <div className="world-toolbar">
               <div className="tool-cluster">
                 <button
+                  type="button"
                   id="undo"
                   className="tool-button"
                   title="Undo last pinch (Z)"
@@ -349,6 +390,7 @@ export function App(props: AppProps) {
                   <span>Undo</span>
                 </button>
                 <button
+                  type="button"
                   id="pause"
                   className="tool-button"
                   title="Pause or resume (Space)"
@@ -359,6 +401,7 @@ export function App(props: AppProps) {
                   <span>{paused ? "Resume" : "Pause"}</span>
                 </button>
                 <button
+                  type="button"
                   id="reset"
                   className="tool-button"
                   title="Reset this seeded world"
@@ -372,11 +415,14 @@ export function App(props: AppProps) {
                 </button>
               </div>
               <button
+                type="button"
                 id="sound"
                 className="tool-button sound-button"
                 aria-pressed={soundOn}
                 title="Enable gentle sound"
-                onClick={toggleSound}
+                onClick={() => {
+                  toggleSound().catch(() => notify("Sound is unavailable in this browser."));
+                }}
               >
                 <Icon name="sound" />
                 <span>Sound {soundOn ? "on" : "off"}</span>
@@ -419,14 +465,14 @@ export function App(props: AppProps) {
             <span className="eyebrow">NOTES FROM THE BOWL</span>
             <p id="observation">{world.events[0]?.text || "The bowl is quietly growing."}</p>
           </div>
-          <button className="text-button guide-button" onClick={openGuide}>
+          <button type="button" className="text-button guide-button" onClick={openGuide}>
             Explore the field guide <span>↗</span>
           </button>
         </section>
         <footer>
           <div className="seed-line">
             WORLD SEED{" "}
-            <button id="seed-open" onClick={() => setDialog("seed")}>
+            <button type="button" id="seed-open" onClick={() => setDialog("seed")}>
               <span id="seed-name">{world.seed}</span> <Icon name="leaf" />
             </button>
           </div>
@@ -435,6 +481,7 @@ export function App(props: AppProps) {
               {saving ? "● Saved on this device" : "○ Save unavailable · export to keep"}
             </span>
             <button
+              type="button"
               id="save-retry"
               hidden={saving}
               onClick={() =>
@@ -448,10 +495,10 @@ export function App(props: AppProps) {
               Retry save
             </button>
             <span id="offline-status">{offline}</span>
-            <button id="export" onClick={exportWorld}>
+            <button type="button" id="export" onClick={exportWorld}>
               Export
             </button>
-            <button id="import" onClick={() => importFile.current?.click()}>
+            <button type="button" id="import" onClick={() => importFile.current?.click()}>
               Import
             </button>
             <input
@@ -460,7 +507,11 @@ export function App(props: AppProps) {
               type="file"
               accept=".json,application/json"
               hidden
-              onChange={(event) => importWorld(event.currentTarget)}
+              onChange={(event) => {
+                importWorld(event.currentTarget).catch(() =>
+                  notify("The selected file could not be read."),
+                );
+              }}
             />
           </div>
         </footer>

@@ -1,7 +1,7 @@
 import { GUIDE, type World } from "../simulation.ts";
 import { residentName, residentObservation } from "../naturalist.ts";
-import { Icon } from "../Icon.tsx";
-import { Dialog } from "./Dialog.tsx";
+import { Icon } from "../icon.tsx";
+import { Dialog } from "./dialog.tsx";
 
 const CLUE_TITLES = [
   "A place to put down roots",
@@ -72,7 +72,11 @@ export function GuideDialog(props: GuideDialogProps) {
         <ol id="resident-entries">
           {world.residents.map((resident) => (
             <li key={resident.id}>
-              <button className="resident-note" onClick={() => onVisitPatch(resident.cell)}>
+              <button
+                type="button"
+                className="resident-note"
+                onClick={() => onVisitPatch(resident.cell)}
+              >
                 <span className="resident-mark" aria-hidden="true">
                   <Icon name="leaf" />
                 </span>

@@ -1,8 +1,7 @@
 import { INGREDIENTS, type Ingredient, type IngredientId } from "../simulation.ts";
-import { Icon } from "../Icon.tsx";
+import { Icon } from "../icon.tsx";
 
-export const pinchLabel = (item: Ingredient): string =>
-  `Add ${item.id === "water" ? "a splash" : "a pinch"} of ${item.name.toLowerCase()}`;
+import { pinchLabel } from "../pantry-label.ts";
 
 interface PantryProps {
   selected: Ingredient;
@@ -28,6 +27,7 @@ export function Pantry(props: PantryProps) {
       <div className="ingredients">
         {INGREDIENTS.map((item, index) => (
           <button
+            type="button"
             key={item.id}
             className="ingredient"
             data-ingredient={item.id}
@@ -51,7 +51,7 @@ export function Pantry(props: PantryProps) {
       </div>
       <div className="ingredient-detail">
         <p id="ingredient-effect">{selected.effect}</p>
-        <button id="sprinkle" className="sprinkle-button" onClick={onSprinkle}>
+        <button type="button" id="sprinkle" className="sprinkle-button" onClick={onSprinkle}>
           <Icon name="spoon" />
           <span>{pinchLabel(selected)}</span>
           <span className="button-arrow">↗</span>

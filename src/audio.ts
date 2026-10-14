@@ -7,8 +7,8 @@ export interface Sound {
 
 // No assets, network, or autoplay. A user gesture unlocks two soft notes.
 export function createSound(): Sound {
-  let context: AudioContext | undefined,
-    enabled = false;
+  let context: AudioContext | undefined;
+  let enabled = false;
 
   return {
     async toggle() {
@@ -28,12 +28,15 @@ export function createSound(): Sound {
       return enabled;
     },
     play(index = 0) {
-      if (!enabled || !context) return;
+      if (!enabled || !context) {
+        return;
+      }
+
       const now = context.currentTime;
 
       for (let i = 0; i < 2; i++) {
-        const oscillator = context.createOscillator(),
-          gain = context.createGain();
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
 
         oscillator.type = "sine";
         oscillator.frequency.value = NOTES[index % 7] * (i ? 1.5 : 1);
@@ -44,10 +47,14 @@ export function createSound(): Sound {
         gain.connect(context.destination);
         oscillator.start(now);
         oscillator.stop(now + 0.3);
-        oscillator.onended = () => {
-          oscillator.disconnect();
-          gain.disconnect();
-        };
+        oscillator.addEventListener(
+          "ended",
+          () => {
+            oscillator.disconnect();
+            gain.disconnect();
+          },
+          { once: true },
+        );
       }
     },
   };
