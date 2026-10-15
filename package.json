@@ -5,6 +5,7 @@
   "description": "A local-first ingredient ecology toy: a tiny world, by the spoonful.",
   "type": "module",
   "scripts": {
+    "prepare": "husky",
     "dev": "portless run vite",
     "build": "vite build",
     "preview": "vite preview",
@@ -36,6 +37,8 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "cf": "1.0.0-beta.14",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
     "oxfmt": "^0.73.0",
     "oxlint": "^1.88.0",
     "oxlint-tsgolint": "^7.0.2004",
@@ -46,6 +49,15 @@
     "vitest": "5.0.3",
     "workbox-build": "7.4.1",
     "workbox-window": "7.4.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}": [
+      "oxlint --fix",
+      "oxfmt --no-error-on-unmatched-pattern"
+    ],
+    "*.{json,jsonc,json5,css,scss,md,mdx,yml,yaml,html,toml,vue,svelte,astro,graphql}": [
+      "oxfmt --no-error-on-unmatched-pattern"
+    ]
   },
   "engines": {
     "node": ">=22.12"
