@@ -22,31 +22,31 @@
   },
   "dependencies": {
     "phaser": "4.2.1",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "zod": "4.6.5"
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@aranlucas/oxforge": "0.2.2",
-    "@axe-core/playwright": "4.13.0",
-    "@cloudflare/build-output-utils": "0.9.0",
+    "@axe-core/playwright": "4.14.0",
+    "@cloudflare/build-output-utils": "0.9.3",
     "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02",
-    "@playwright/test": "1.64.0",
+    "@playwright/test": "1.64.1",
     "@types/node": "^26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
-    "cf": "1.0.0-beta.14",
+    "cf": "1.0.0-beta.20",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
-    "oxfmt": "^0.73.0",
-    "oxlint": "^1.88.0",
+    "oxfmt": "^0.74.0",
+    "oxlint": "^1.89.0",
     "oxlint-tsgolint": "^7.0.2004",
-    "portless": "0.15.7",
+    "portless": "0.15.8",
     "typescript": "7.0.2",
-    "vite": "8.3.4",
+    "vite": "8.3.5",
     "vite-plugin-pwa": "2.0.0",
-    "vitest": "5.0.3",
+    "vitest": "5.0.5",
     "workbox-build": "7.4.1",
     "workbox-window": "7.4.1"
   },
@@ -62,5 +62,5 @@
   "engines": {
     "node": ">=22.12"
   },
-  "packageManager": "pnpm@12.10.1"
+  "packageManager": "pnpm@12.14.0"
 }
