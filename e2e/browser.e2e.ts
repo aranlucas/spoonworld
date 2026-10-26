@@ -3,6 +3,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { createWorld, type IngredientId } from "@/simulation.ts";
 import { parseSave } from "@/storage.ts";
 import { AxeBuilder } from "@axe-core/playwright";
+import { collectExternalRequests } from "@test/helpers/external-requests";
 
 const pause = async (page: Page) => {
   await page.locator("#pause").click();
@@ -32,16 +33,15 @@ const box = async (locator: Locator) => {
 
 const snapshot = (page: Page) => page.evaluate(() => window.spoonworld.snapshot());
 
-test("desktop boots without errors or third-party requests; screenshot", async ({ page }) => {
+test("desktop boots without errors or third-party requests; screenshot", async ({
+  page,
+  context,
+  baseURL,
+}) => {
   const errors: string[] = [];
-  const external: string[] = [];
+  const external = collectExternalRequests(context, baseURL);
 
   page.on("pageerror", (error) => errors.push(error.message));
-  page.on("request", (r) => {
-    if (!r.url().startsWith("http://127.0.0.1:4188") && !r.url().startsWith("blob:")) {
-      external.push(r.url());
-    }
-  });
   const response = await page.goto("/");
   const headers = response?.headers() ?? {};
 

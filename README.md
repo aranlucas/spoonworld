@@ -41,6 +41,8 @@ pnpm test:browser                  # needs a prior pnpm build
 
 Unit tests run in Vitest. Browser tests use Playwright with a single worker and temporary browser contexts. For an installed Chrome, use `PLAYWRIGHT_CHANNEL=chrome pnpm test:browser`. The suite starts and stops only its own `vite preview` server on port 4188.
 
+The desktop boot flow collects requests across its browser context and compares parsed URL origins with Playwright's `baseURL`; `blob:` fixtures remain allowed. A separate browser regression fulfills requests in memory and verifies that another page's request to a prefix-matching port is reported. Run it with `pnpm test:browser local-requests.e2e.ts` after building. This checks the request assertion, not every possible network channel or application flow. Native Oxlint enforces classic complexity at most 9 for these browser tests and the request collector.
+
 Tests cover seeded reproducibility, batch-equivalent fixed ticks, five discoveries, salt stress and water recovery, 3,000 randomized actions, save validation, import/export, corrupt-save recovery, quota failure/retry, exact undo/reset/persistence, offline reload, genuine emulated touch, keyboard/reduced motion, responsive layouts, frame budgets, and axe WCAG A/AA checks. See [QA.md](QA.md) for measured results and limits. Each run saves screenshots and reports to the gitignored `test-results/`.
 
 ## Structure and resource bounds
