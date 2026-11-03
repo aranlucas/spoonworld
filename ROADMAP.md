@@ -1,10 +1,10 @@
 # Feature roadmap
 
-Planning baseline: `1900ba625db0` on `origin/main`, 2026-10-26. This local ecology toy is a later portfolio priority.
+Proposed 2026-10-26 against `1900ba625db0`. This local ecology toy is a later portfolio priority; the items below are future work.
 
 ## Outcome
 
-Help a player notice an interesting cause and effect, then try another small experiment. The [current bowl](README.md) already includes five discoveries, patch readings, named sproutlings, undo, local saves, portable world files and offline play.
+Help a player notice an interesting cause and effect, then try another small experiment.
 
 ## 1. Compare a chosen patch before and after a sprinkle
 
@@ -27,7 +27,13 @@ Acceptance: imports preserve the current bowl on failure, storage limits are vis
 
 ## 3. One additional ecological surprise
 
-Add an authored discovery only when it offers a new interaction with existing ingredients. Give it a gentle clue and a deterministic regression.
+Add an authored discovery only when it offers a new interaction with existing ingredients. One candidate is a sequencing-dependent surprise: a rain-watered salty grove becoming a miniature mangrove coast. Give it a gentle clue and a deterministic regression.
+
+## Further experiments
+
+- Playtest the patch notebook and resident notes with VoiceOver, including live changes and focus restoration.
+- Explore split bowls with a shared seed for side-by-side recipe comparisons.
+- Try an optional two-minute illustrated recipe challenge while preserving open-ended play.
 
 ## Boundaries
 
