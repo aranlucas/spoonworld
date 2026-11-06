@@ -1,4 +1,4 @@
-import { residentMode, type Cell, type Resident, type World } from "./simulation.ts";
+import { isBriny, residentMode, type Cell, type Resident, type World } from "./simulation.ts";
 
 const NAMES = [
   "Pip",
@@ -20,8 +20,6 @@ export const residentName = (resident: Resident): string => NAMES[resident.id];
 export const patchName = (cell: Cell): string =>
   `Patch ${cell.id + 1} · ${cell.land ? "meadow" : "sea"} (${cell.q}, ${cell.r})`;
 
-// Observations are derived from the same current state as the artwork. No new
-// save fields, history, random names, or generated text are needed.
 export function residentObservation(world: World, resident: Resident): string {
   const mode = residentMode(world, resident);
 
@@ -42,7 +40,7 @@ export function residentObservation(world: World, resident: Resident): string {
 
 export function patchObservation(world: World, cell: Cell): string {
   if (!cell.land) {
-    return world.salinity >= 30
+    return isBriny(world)
       ? "The bowl’s briny sea welcomes kelp and shell boats. Water dilutes the brine."
       : "A quiet sea patch. A little more sea salt can welcome kelp and shell boats.";
   }

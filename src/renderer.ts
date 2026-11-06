@@ -1,6 +1,9 @@
 import * as Phaser from "phaser";
 import {
   hexDistance,
+  isRaining,
+  isBriny,
+  hasBubbleFerries,
   residentMode,
   type Cell,
   type ResidentMode,
@@ -300,19 +303,21 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
         };
       };
 
-      let start: PointerStart | null = null;
-      canvas.addEventListener("pointermove", (event) => {
+      const hitPatch = (event: PointerEvent): Hover | null => {
         const p = position(event);
-        hovered = getWorld()
+        const closest = getWorld()
           .cells.map((c) => ({
             c,
             d: Math.hypot(project(c).x - p.x, (project(c).y - p.y) * 1.4),
           }))
           .toSorted((a, b) => a.d - b.d)[0];
 
-        if (hovered && hovered.d > 47) {
-          hovered = null;
-        }
+        return closest && closest.d < 47 ? closest : null;
+      };
+
+      let start: PointerStart | null = null;
+      canvas.addEventListener("pointermove", (event) => {
+        hovered = hitPatch(event);
       });
       canvas.addEventListener("pointerleave", () => {
         hovered = null;
@@ -338,16 +343,9 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
           return;
         }
 
-        const pointer = position(event);
+        const closest = hitPatch(event);
 
-        const closest = getWorld()
-          .cells.map((c) => ({
-            c,
-            d: Math.hypot(project(c).x - pointer.x, (project(c).y - pointer.y) * 1.4),
-          }))
-          .toSorted((a, b) => a.d - b.d)[0];
-
-        if (closest && closest.d < 47) {
+        if (closest) {
           selected = closest.c.id;
           onTap(selected);
         }
@@ -399,7 +397,6 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = 2;
-    // Pencil-like environmental marks keep the world a small, hand-made object.
     ctx.strokeStyle = "#d8d2bf";
     ctx.lineWidth = 1;
 
@@ -431,7 +428,6 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
 
     ellipse(ctx, 480, 547, 252, 35, "#d9cbb741");
     ellipse(ctx, 480, 544, 194, 18, "#c5bda633");
-    // Ceramic body, painted first so the water and habitat sit inside the rim.
     const bowlGradient = ctx.createLinearGradient(0, 335, 0, 535);
     bowlGradient.addColorStop(0, "#efe0c7");
     bowlGradient.addColorStop(0.8, "#e5c9a8");
@@ -481,8 +477,8 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
     ctx.restore();
     ellipse(ctx, 480, 326, 294, 169, "#f3e5cc", "#af9779");
     const sea = ctx.createLinearGradient(0, 220, 0, 490);
-    sea.addColorStop(0, w.salinity > 30 ? "#4e908a" : "#6aa29a");
-    sea.addColorStop(1, w.salinity > 30 ? "#2f716f" : "#3f8580");
+    sea.addColorStop(0, isBriny(w) ? "#4e908a" : "#6aa29a");
+    sea.addColorStop(1, isBriny(w) ? "#2f716f" : "#3f8580");
     ellipse(ctx, 480, 326, 274, 151, sea, "#b7b795");
     ctx.save();
     ctx.beginPath();
@@ -501,7 +497,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       ctx.stroke();
     }
 
-    if (w.salinity >= 30) {
+    if (isBriny(w)) {
       for (let i = 0; i < 12; i++) {
         const a = (i * Math.PI) / 6;
 
@@ -559,7 +555,6 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Tiny strokes make ground readable without a grid overlay.
       for (let j = 0; j < 3; j++) {
         const xx = x - 13 + j * 11;
         const yy = y + 6 + (j % 2) * 5;
@@ -601,7 +596,6 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       ctx.restore();
     }
 
-    // Trees and residents are sorted together for predictable depth.
     const objects: Drawable[] = [];
 
     for (const c of cells.filter((cell) => cell.land)) {
@@ -676,7 +670,6 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       object.draw();
     }
 
-    // Three clouds and a sun: a strict fixed weather budget.
     ellipse(ctx, 677, 151, 22, 22, "#e7c479");
     ellipse(ctx, 671, 146, 18, 18, "#efd49b");
     cloud(ctx, 310 + Math.sin(t * 0.1) * 11, 137, 0.8, 0.9);
@@ -686,7 +679,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       cloud(ctx, 456 + Math.sin(t * 0.15) * 20, 111, 1.05, 0.88);
     }
 
-    if (w.heat >= 42 && w.humidity >= 58) {
+    if (isRaining(w)) {
       for (let i = 0; i < 26; i++) {
         const x = 280 + ((i * 73) % 390);
         const y = 181 + ((i * 49 + t * 55) % 215);
@@ -703,7 +696,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       }
     }
 
-    if (w.fizz > 10) {
+    if (hasBubbleFerries(w)) {
       for (let i = 0; i < 8; i++) {
         const x = 340 + ((i * 57) % 280);
         const y = 230 - ((t * 19 + i * 24) % 90);

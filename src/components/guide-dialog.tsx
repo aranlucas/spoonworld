@@ -3,14 +3,6 @@ import { residentName, residentObservation } from "../naturalist.ts";
 import { Icon } from "../icon.tsx";
 import { Dialog } from "./dialog.tsx";
 
-const CLUE_TITLES = [
-  "A place to put down roots",
-  "A well-seasoned sea",
-  "Weather from the pantry",
-  "A meadow with its own lights",
-  "Something lighter than air",
-];
-
 interface GuideDialogProps {
   open: boolean;
   world: World;
@@ -33,7 +25,9 @@ export function GuideDialog(props: GuideDialogProps) {
       subtitle="Follow a clue. Try a combination. Let the bowl surprise you."
     >
       <div id="guide-progress">
-        <span>{world.discovered.length} of 5 wonders found</span>
+        <span>
+          {world.discovered.length} of {GUIDE.length} wonders found
+        </span>
         <span className="progress-dots">
           {GUIDE.map((g) => (
             <i key={g.id} className={world.discovered.includes(g.id) ? "found" : ""} />
@@ -54,7 +48,7 @@ export function GuideDialog(props: GuideDialogProps) {
                   FIELD NOTE {String(index + 1).padStart(2, "0")} ·{" "}
                   {found ? "DISCOVERED" : "A CLUE"}
                 </span>
-                <h3>{found ? g.title : CLUE_TITLES[index]}</h3>
+                <h3>{found ? g.title : g.clue}</h3>
                 <p>{found ? g.text : g.hint}</p>
                 {found && <span className="recipe">{g.recipe}</span>}
               </div>

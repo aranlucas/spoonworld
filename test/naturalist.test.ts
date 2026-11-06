@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { createWorld, addIngredient, stepWorld, residentMode } from "@/simulation.ts";
+import { createWorld, addIngredient, stepWorld, weather, residentMode } from "@/simulation.ts";
 import { residentName, residentObservation, patchObservation } from "@/naturalist.ts";
 
 test("resident notes follow current modes immediately, including exhausted fizz", () => {
@@ -53,3 +53,18 @@ test("patch notes explain the actual growth thresholds without mutating a save",
   w.salinity = 30;
   expect(patchObservation(w, w.cells[0])).toMatch(/shell boats/);
 });
+
+test.each([
+  { salinity: 29.99, mode: "wandering", note: "quiet sea", weatherName: "Soft & sunny" },
+  { salinity: 30, mode: "sailing", note: "shell boats", weatherName: "Briny & bright" },
+])(
+  "briny sea begins at 30%, including notes and sailors: $salinity",
+  ({ salinity, mode, note, weatherName }) => {
+    const world = { ...createWorld("notebook"), salinity };
+
+    expect(residentMode(world, world.residents[0])).toBe(mode);
+    expect(patchObservation(world, world.cells[0])).toContain(note);
+    expect(weather(world).name).toBe(weatherName);
+    expect(addIngredient(world, "herbs", 30).discovered.includes("sailors")).toBe(salinity === 30);
+  },
+);

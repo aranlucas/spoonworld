@@ -4,6 +4,7 @@ import {
   createWorld,
   addIngredient,
   stepWorld,
+  weather,
   validateWorld,
   INGREDIENTS,
   GUIDE,
@@ -180,3 +181,23 @@ describe("storage", () => {
     expect(loadSave(working).status).toBe("invalid");
   });
 });
+
+// Boundary fixtures express the documented weather contract, independently of the predicates.
+test.each([
+  { heat: 42, humidity: 58, raining: true },
+  { heat: 41.99, humidity: 58, raining: false },
+  { heat: 42, humidity: 57.99, raining: false },
+])(
+  "rain discovery, weather and watering agree at $heat/$humidity",
+  ({ heat, humidity, raining }) => {
+    const world = { ...createWorld(), heat, humidity };
+    const after = stepWorld(world);
+
+    expect(weather(world).name).toBe(
+      raining ? "Kitchen rain" : heat >= 42 ? "Spicy winds" : "Soft & sunny",
+    );
+    expect(after.cells[30].moisture > world.cells[30].moisture).toBe(raining);
+    // Discovery runs after the air relaxes, so use a pinch to observe the exact boundary.
+    expect(addIngredient(world, "herbs", 30).discovered.includes("rain")).toBe(raining);
+  },
+);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { registerSW } from "virtual:pwa-register";
-import { describeWorld, weather, INGREDIENTS, type World } from "./simulation.ts";
+import { describeWorld, weather, GUIDE, INGREDIENTS, type World } from "./simulation.ts";
 import type { Game } from "./game.ts";
 import type { Sound } from "./audio.ts";
 import type { WorldCallbacks, WorldRenderer } from "./renderer.ts";
@@ -71,7 +71,6 @@ export function App(props: AppProps) {
   }, [dialog]);
 
   const notify = useCallback((text: string) => {
-    // A fresh object restarts the timer even when the text repeats.
     setToast({ text });
     setAnnouncement(text);
   }, []);
@@ -126,7 +125,6 @@ export function App(props: AppProps) {
   const closeDialog = (name: OpenDialog) => () =>
     setDialog((current) => (current === name ? null : current));
 
-  // Stable callbacks so the Phaser game mounts once.
   const worldCallbacks = useMemo<WorldCallbacks>(
     () => ({ getWorld: () => game.getState().world, onTap: (cellId) => sprinkle(cellId) }),
     [game, sprinkle],
@@ -138,7 +136,6 @@ export function App(props: AppProps) {
 
   useEffect(() => renderer.current?.setTarget(target), [target]);
 
-  // Fixed one-second ecology clock. Hidden tabs and open dialogs hold the world.
   useEffect(() => {
     let last = performance.now();
     let accumulator = 0;
@@ -252,7 +249,6 @@ export function App(props: AppProps) {
     }
   }, [game, notify]);
 
-  // Read-only diagnostics for tests and resource inspection. No external calls.
   useEffect(() => {
     window.spoonworld = Object.freeze({
       snapshot: () => structuredClone(game.getState().world),
@@ -336,7 +332,9 @@ export function App(props: AppProps) {
         <span className="edition">SMALL WORLDS / BIG POSSIBILITIES</span>
         <button type="button" className="text-button guide-button" onClick={openGuide}>
           <Icon name="book" /> Field guide{" "}
-          <span className="guide-count">{world.discovered.length}/5</span>
+          <span className="guide-count">
+            {world.discovered.length}/{GUIDE.length}
+          </span>
         </button>
       </header>
       <main>
