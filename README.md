@@ -30,9 +30,12 @@ Worlds stay in this browser’s local storage. Use **Export** for a portable bac
 pnpm check                         # lint, format, typecheck, unit tests, build
 pnpm exec playwright install chromium
 pnpm test:browser                  # needs a prior pnpm build
+pnpm test:e2e                      # deterministic reliability journeys; same production build
 ```
 
 The browser suite starts its own production preview on port 4188; leave that port free. For installed Chrome, use `PLAYWRIGHT_CHANNEL=chrome pnpm test:browser`. Screenshots, accessibility results, and the short runtime sample are written to gitignored `test-results/`.
+
+The `e2e` runner (`tester-army/e2e`) adds deterministic sound-recovery, canceled-pointer, and discovery/persistence/undo journeys with `@e2e-dev/web`. No model or credentials are needed. CI uploads browser reports and failure traces. Its optional `reproduce-baseline` dispatch input runs the same journeys against the audited pre-fix runtime and verifies both defect assertions fail while the persistence journey passes.
 
 Browser coverage is configured for Chromium, including emulated touch. The desktop boot check rejects requests outside the app origin; this is not an audit of every network channel or flow. Automated accessibility scans and a short runtime sample do not establish screen-reader usability, physical-device compatibility, storage-eviction recovery, or long-session performance. The [roadmap](ROADMAP.md) includes a human VoiceOver playtest.
 

@@ -11,20 +11,21 @@ export function createSound(): Sound {
 
   return {
     async toggle() {
-      enabled = !enabled;
-
       if (enabled) {
-        if (!("AudioContext" in window)) {
-          enabled = false;
+        enabled = false;
 
-          return false;
-        }
-
-        context ??= new AudioContext();
-        await context.resume();
+        return false;
       }
 
-      return enabled;
+      if (!("AudioContext" in window)) {
+        return false;
+      }
+
+      context ??= new AudioContext();
+      await context.resume();
+      enabled = true;
+
+      return true;
     },
     play(index = 0) {
       if (!enabled || !context) {

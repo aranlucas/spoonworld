@@ -324,6 +324,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
       });
       canvas.addEventListener("pointerleave", () => {
         hovered = null;
+        start = null;
       });
       canvas.addEventListener("pointerdown", (event) => {
         if (event.isPrimary && event.button === 0) {
@@ -334,7 +335,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
         start = null;
       });
       canvas.addEventListener("pointerup", (event) => {
-        if (!start || start.id !== event.pointerId) {
+        if (!start || start.id !== event.pointerId || !event.isPrimary || event.button !== 0) {
           return;
         }
 

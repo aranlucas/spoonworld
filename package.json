@@ -18,7 +18,8 @@
     "format:check": "oxfmt --check",
     "lint": "oxlint .",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
-    "lint:fix": "oxlint --fix"
+    "lint:fix": "oxlint --fix",
+    "test:e2e": "e2e run"
   },
   "dependencies": {
     "phaser": "4.2.1",
@@ -31,12 +32,14 @@
     "@axe-core/playwright": "4.14.0",
     "@cloudflare/build-output-utils": "0.9.3",
     "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02",
+    "@e2e-dev/web": "0.15.5",
     "@playwright/test": "1.64.1",
     "@types/node": "^26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "cf": "1.0.0-beta.20",
+    "e2e": "0.23.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "oxfmt": "^0.74.0",
