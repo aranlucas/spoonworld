@@ -458,14 +458,23 @@ test("runtime clock advances and the renderer respects its bounded frame budget"
   await cdp.send("Performance.enable");
 
   const first = await page.evaluate(() => ({
+    now: performance.now(),
     world: window.spoonworld.snapshot(),
     debug: window.spoonworld.debug(),
   }));
 
-  const start = Date.now();
-  await page.waitForTimeout(3000);
+  await expect
+    .poll(async () => (await snapshot(page)).tick - first.world.tick)
+    .toBeGreaterThanOrEqual(2);
+  await expect
+    .poll(
+      async () =>
+        (await page.evaluate(() => window.spoonworld.debug())).frames - first.debug.frames,
+    )
+    .toBeGreaterThan(10);
 
   const last = await page.evaluate(() => ({
+    now: performance.now(),
     world: window.spoonworld.snapshot(),
     debug: window.spoonworld.debug(),
   }));
@@ -474,7 +483,7 @@ test("runtime clock advances and the renderer respects its bounded frame budget"
 
   const report = {
     browser: page.context().browser()?.version(),
-    elapsedMs: Date.now() - start,
+    elapsedMs: last.now - first.now,
     simulationTicks: last.world.tick - first.world.tick,
     renderFrames: last.debug.frames - first.debug.frames,
     budget: last.debug,
@@ -486,8 +495,8 @@ test("runtime clock advances and the renderer respects its bounded frame budget"
   await mkdir("test-results", { recursive: true });
   await writeFile("test-results/runtime-budget.json", JSON.stringify(report, null, 2));
   expect(report.simulationTicks).toBeGreaterThanOrEqual(2);
-  expect(report.simulationTicks).toBeLessThanOrEqual(4);
+  expect(report.simulationTicks).toBeLessThanOrEqual(Math.ceil(report.elapsedMs / 1000) + 1);
   expect(report.renderFrames).toBeGreaterThan(10);
-  expect(report.renderFrames).toBeLessThan(110);
+  expect(report.renderFrames).toBeLessThanOrEqual(Math.ceil((report.elapsedMs / 1000) * 36) + 2);
   expect(report.budget.particles).toBeLessThanOrEqual(48);
 });

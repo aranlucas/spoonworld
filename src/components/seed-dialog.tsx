@@ -24,7 +24,6 @@ export function SeedDialog(props: SeedDialogProps) {
       title="A fresh little beginning."
       subtitle="The same seed grows the same island. Your current world can be restored with Undo."
     >
-      {/* Remount on open so the field starts from the current seed. */}
       <SeedForm key={String(open)} seed={seed} onSubmit={onSubmit} />
     </Dialog>
   );

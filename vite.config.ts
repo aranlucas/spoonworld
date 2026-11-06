@@ -8,7 +8,6 @@ export default defineConfig({
   plugins: [
     react(),
     cloudflare(),
-    // Installable, offline-first PWA: Workbox precaches every shipped asset.
     VitePWA({
       // The Cloudflare plugin moves client assets into cf's Build Output after
       // this plugin resolves, so ask the Build Output spec where they go.

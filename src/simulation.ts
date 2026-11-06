@@ -1,4 +1,3 @@
-// Pure, serializable world rules. No DOM, time, renderer, or random global state.
 import { z } from "zod";
 
 export const WORLD_VERSION = 1 as const;
@@ -85,8 +84,6 @@ function matchesSeed(world: World): boolean {
   );
 }
 
-// Saves and imports are untrusted: every field is bounded, and the fixed
-// terrain must match the island its seed grows.
 export const WorldSchema = WorldFieldsSchema.refine(matchesSeed, "World does not match its seed.");
 
 export interface Ingredient {
@@ -101,6 +98,7 @@ export interface Ingredient {
 export interface GuideEntry {
   id: GuideId;
   title: string;
+  clue: string;
   hint: string;
   recipe: string;
   text: string;
@@ -181,6 +179,7 @@ export const GUIDE: readonly GuideEntry[] = [
   {
     id: "grove",
     title: "The herb woods",
+    clue: "A place to put down roots",
     hint: "A few leaves, a drink, and room to take root.",
     recipe: "Herbs + damp soil",
     text: "Herbs root in moist ground. Little sproutlings gather where the canopy is kind.",
@@ -189,6 +188,7 @@ export const GUIDE: readonly GuideEntry[] = [
   {
     id: "sailors",
     title: "The brine brigade",
+    clue: "A well-seasoned sea",
     hint: "Some little folk prefer their sea well seasoned.",
     recipe: "Sea salt → briny water",
     text: "Salty water welcomes kelp and shell boats. Land plants prefer a lighter pinch.",
@@ -197,6 +197,7 @@ export const GUIDE: readonly GuideEntry[] = [
   {
     id: "rain",
     title: "A cloud with a kitchen",
+    clue: "Weather from the pantry",
     hint: "What happens to water when the kitchen warms?",
     recipe: "Chili + water → rain",
     text: "Warm, damp air makes a soft rain. The shower waters every patch in the bowl.",
@@ -205,6 +206,7 @@ export const GUIDE: readonly GuideEntry[] = [
   {
     id: "glow",
     title: "The lantern meadow",
+    clue: "A meadow with its own lights",
     hint: "Give a growing meadow something sweet.",
     recipe: "Herbs + sugar",
     text: "Sweet flowering herbs attract glowbugs. Their lanterns float above the growing meadow.",
@@ -213,6 +215,7 @@ export const GUIDE: readonly GuideEntry[] = [
   {
     id: "ferry",
     title: "The bubble ferry",
+    clue: "Something lighter than air",
     hint: "A sour fruit. A quiet powder. Something lighter than air.",
     recipe: "Lemon + baking soda, on one patch",
     text: "Acidity and baking soda make fizz. The sproutlings turn the bubbles into tiny flying ferries.",
@@ -315,13 +318,23 @@ function record(world: World, text: string) {
   world.events = world.events.slice(0, 6);
 }
 
+export const isDry = (cell: Cell): boolean => cell.moisture <= 25;
+
+export const isSalty = (cell: Cell): boolean => cell.salt >= 65;
+
+export const isBriny = (world: World): boolean => world.salinity >= 30;
+
+export const isRaining = (world: World): boolean => world.heat >= 42 && world.humidity >= 58;
+
+export const hasBubbleFerries = (world: World): boolean => world.fizz > 10;
+
 function discover(world: World) {
   const conditions: Record<GuideId, boolean> = {
     grove: world.cells.some((c) => c.land && c.herbs >= 45 && c.moisture >= 30 && c.salt < 65),
-    sailors: world.salinity >= 30,
-    rain: world.heat >= 42 && world.humidity >= 58,
+    sailors: isBriny(world),
+    rain: isRaining(world),
     glow: world.cells.some((c) => c.land && c.herbs >= 35 && c.sugar >= 20 && c.moisture > 25),
-    ferry: world.fizz > 10,
+    ferry: hasBubbleFerries(world),
   };
 
   for (const entry of GUIDE) {
@@ -416,7 +429,7 @@ export function addIngredient(previous: World, ingredient: IngredientId, cellId:
 }
 
 export function weather(world: World): Weather {
-  if (world.fizz > 10) {
+  if (hasBubbleFerries(world)) {
     return {
       name: "Bubble breeze",
       symbol: "◌",
@@ -424,7 +437,7 @@ export function weather(world: World): Weather {
     };
   }
 
-  if (world.heat >= 42 && world.humidity >= 58) {
+  if (isRaining(world)) {
     return {
       name: "Kitchen rain",
       symbol: "☂",
@@ -440,7 +453,7 @@ export function weather(world: World): Weather {
     };
   }
 
-  if (world.salinity >= 30) {
+  if (isBriny(world)) {
     return {
       name: "Briny & bright",
       symbol: "≈",
@@ -456,9 +469,9 @@ export function weather(world: World): Weather {
 }
 
 export function residentMode(world: World, resident: Resident): ResidentMode {
-  return world.fizz > 10
+  return hasBubbleFerries(world)
     ? "flying"
-    : world.salinity >= 30 && resident.id % 3 === 0
+    : isBriny(world) && resident.id % 3 === 0
       ? "sailing"
       : world.cells[resident.cell].herbs > 45
         ? "nesting"
@@ -474,7 +487,7 @@ export function stepWorld(previous: World, steps = 1): World {
 
   for (let i = 0; i < steps; i++) {
     world.tick = (world.tick + 1) % 1000000000;
-    const rain = world.heat >= 42 && world.humidity >= 58;
+    const rain = isRaining(world);
     world.heat += (26 - world.heat) * 0.002;
     world.humidity += (54 - world.humidity) * 0.003;
     world.fizz = clamp(world.fizz - 0.4);
@@ -483,7 +496,7 @@ export function stepWorld(previous: World, steps = 1): World {
       c.moisture = clamp(c.moisture + (rain ? 0.55 : -0.08 - Math.max(0, world.heat - 40) * 0.012));
 
       if (c.land && c.herbs > 3) {
-        c.herbs = clamp(c.herbs + (c.moisture > 25 && c.salt < 65 ? 0.13 : -0.18));
+        c.herbs = clamp(c.herbs + (!isDry(c) && !isSalty(c) ? 0.13 : -0.18));
       }
 
       c.sugar = clamp(c.sugar - 0.025);

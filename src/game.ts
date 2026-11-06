@@ -13,7 +13,6 @@ import {
   parseSave,
   saveWorld,
   serializeSave,
-  MAX_SAVE_BYTES,
   type LoadResult,
   type SaveStorage,
 } from "./storage.ts";
@@ -47,8 +46,6 @@ export interface Game {
   persist: () => boolean;
 }
 
-// Owns the world, its undo history, and persistence. The UI and renderer read
-// snapshots; every change goes through these actions.
 export function createGame(storage: SaveStorage | null): Game {
   const saved = loadSave(storage);
 
@@ -125,10 +122,6 @@ export function createGame(storage: SaveStorage | null): Game {
     reset: () => replaceWorld(createWorld(state.world.seed)),
     changeSeed: (seed) => replaceWorld(createWorld(seed)),
     importSave(raw) {
-      if (raw.length > MAX_SAVE_BYTES) {
-        throw new Error("This world file is too large.");
-      }
-
       const imported = parseSave(raw);
 
       replaceWorld(imported.world, [...imported.history, state.world].slice(-MAX_HISTORY));

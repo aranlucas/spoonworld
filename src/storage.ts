@@ -19,7 +19,6 @@ export type LoadResult =
 
 export type SaveStorage = Pick<Storage, "getItem" | "setItem">;
 
-// Saved and imported text is untrusted until it parses as a whole save.
 export function parseSave(raw: string): SaveData {
   if (raw.length > MAX_SAVE_BYTES) {
     throw new Error("This world file is too large or unreadable.");

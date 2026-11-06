@@ -5,7 +5,6 @@ export interface Sound {
   play(index?: number): void;
 }
 
-// No assets, network, or autoplay. A user gesture unlocks two soft notes.
 export function createSound(): Sound {
   let context: AudioContext | undefined;
   let enabled = false;

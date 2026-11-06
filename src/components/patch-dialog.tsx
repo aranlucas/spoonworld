@@ -1,4 +1,10 @@
-import { INGREDIENTS, type Ingredient, type IngredientId, type World } from "../simulation.ts";
+import {
+  hasBubbleFerries,
+  INGREDIENTS,
+  type Ingredient,
+  type IngredientId,
+  type World,
+} from "../simulation.ts";
 import { patchName, patchObservation, residentName } from "../naturalist.ts";
 import { Icon } from "../icon.tsx";
 import { Dialog } from "./dialog.tsx";
@@ -38,7 +44,7 @@ function chemistryNote(world: World, target: number): string {
     return "Baking soda is waiting here. Try lemon on this same patch.";
   }
 
-  if (world.fizz > 10) {
+  if (hasBubbleFerries(world)) {
     return "The bowl is fizzing. Sproutlings can ride the bubbles until the fizz fades.";
   }
 
