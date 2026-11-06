@@ -61,6 +61,7 @@ export function App(props: AppProps) {
   );
 
   const [soundOn, setSoundOn] = useState(false);
+  const [soundBusy, setSoundBusy] = useState(false);
   const [offline, setOffline] = useState("Local & private");
   const renderer = useRef<WorldRenderer | null>(null);
   const importFile = useRef<HTMLInputElement>(null);
@@ -269,6 +270,12 @@ export function App(props: AppProps) {
   }, [game]);
 
   const toggleSound = async () => {
+    if (soundBusy) {
+      return;
+    }
+
+    setSoundBusy(true);
+
     try {
       const enabled = await sound.toggle();
 
@@ -278,7 +285,10 @@ export function App(props: AppProps) {
         sound.play(0);
       }
     } catch {
+      setSoundOn(false);
       notify("Sound is unavailable in this browser. The bowl is still playable.");
+    } finally {
+      setSoundBusy(false);
     }
   };
 
@@ -417,6 +427,7 @@ export function App(props: AppProps) {
                 id="sound"
                 className="tool-button sound-button"
                 aria-pressed={soundOn}
+                disabled={soundBusy}
                 title="Enable gentle sound"
                 onClick={() => {
                   toggleSound().catch(() => notify("Sound is unavailable in this browser."));
