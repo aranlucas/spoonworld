@@ -318,6 +318,10 @@ function record(world: World, text: string) {
   world.events = world.events.slice(0, 6);
 }
 
+export const isDry = (cell: Cell): boolean => cell.moisture <= 25;
+
+export const isSalty = (cell: Cell): boolean => cell.salt >= 65;
+
 export const isBriny = (world: World): boolean => world.salinity >= 30;
 
 export const isRaining = (world: World): boolean => world.heat >= 42 && world.humidity >= 58;
@@ -492,7 +496,7 @@ export function stepWorld(previous: World, steps = 1): World {
       c.moisture = clamp(c.moisture + (rain ? 0.55 : -0.08 - Math.max(0, world.heat - 40) * 0.012));
 
       if (c.land && c.herbs > 3) {
-        c.herbs = clamp(c.herbs + (c.moisture > 25 && c.salt < 65 ? 0.13 : -0.18));
+        c.herbs = clamp(c.herbs + (!isDry(c) && !isSalty(c) ? 0.13 : -0.18));
       }
 
       c.sugar = clamp(c.sugar - 0.025);

@@ -3,6 +3,8 @@ import {
   hexDistance,
   isRaining,
   isBriny,
+  isDry,
+  isSalty,
   hasBubbleFerries,
   residentMode,
   type Cell,
@@ -543,12 +545,11 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
         );
       }
 
-      const color =
-        c.salt >= 65
-          ? "#cab780"
-          : c.moisture < 25
-            ? "#bdb47d"
-            : ["#a9bc78", "#b4c681", "#a6bc76", "#b8c78a"][c.variant];
+      const color = isSalty(c)
+        ? "#cab780"
+        : isDry(c)
+          ? "#bdb47d"
+          : ["#a9bc78", "#b4c681", "#a6bc76", "#b8c78a"][c.variant];
 
       path(ctx, points, color);
       ctx.strokeStyle = "#afc08244";
@@ -566,7 +567,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
             [xx, yy - 3],
             [xx + 2, yy],
           ],
-          c.salt > 65 ? "#a69764" : "#72945766",
+          isSalty(c) ? "#a69764" : "#72945766",
           1,
         );
       }

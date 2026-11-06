@@ -1,4 +1,12 @@
-import { isBriny, residentMode, type Cell, type Resident, type World } from "./simulation.ts";
+import {
+  isDry,
+  isSalty,
+  isBriny,
+  residentMode,
+  type Cell,
+  type Resident,
+  type World,
+} from "./simulation.ts";
 
 const NAMES = [
   "Pip",
@@ -49,11 +57,11 @@ export function patchObservation(world: World, cell: Cell): string {
     return "Bare ground needs a pinch of herbs before roots can grow.";
   }
 
-  if (cell.salt >= 65) {
+  if (isSalty(cell)) {
     return "Roots are wilting: local salt is at least 65%. Water rinses salt from this patch and its neighbours.";
   }
 
-  if (cell.moisture <= 25) {
+  if (isDry(cell)) {
     return "Roots are thirsty: moisture is at most 25%. Water or kitchen rain helps them grow again.";
   }
 
