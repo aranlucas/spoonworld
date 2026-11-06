@@ -307,6 +307,7 @@ export function mountWorld(parent: HTMLElement, callbacks: WorldCallbacks): Worl
 
       const hitPatch = (event: PointerEvent): Hover | null => {
         const p = position(event);
+
         const closest = getWorld()
           .cells.map((c) => ({
             c,
